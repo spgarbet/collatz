@@ -65,4 +65,9 @@ Construct a group $G_(2,3)$ of right-continuous bijections of the Cantor set (or
 - Slopes on each linear piece lie in $<2,3> = {\pm2^S\cdot 3^t | s,t \in \mathbb{Z}$
 - Finitely many breakpoints
 
+## Shock and Dismay
 
+Claude gave me Code to search for factorization of an affine mapping that under Hensel-lift it claims would be a proof of the Collatz conjecture 
+for sufficiently large $r$. The code posts a lot of verifications. I randomly found one for $r=21$. 
+
+If $r$ is sufficiently large, whatever that means, then this appears to constitute Claude claiming it solved the Collatz conjecture. I have serious doubts this is true at this point, and a LOT of verification is required. However, I am going to pursue it. It is more likely that this is yet another crank claim of solution to a famous problem.
