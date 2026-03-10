@@ -43,7 +43,7 @@ With the following claims:
 
 4. There exists a fixed point attractor at $Im(\tau) = 1/2$. This is a universal terminal value, regardless of starting point or length.
 
-5. $E[\text{ratio per step}]$ \approx 1.39 > 1$, thus $Im(\tau)$ oscillate.
+5. $E[\text{ratio per step}] \approx 1.39 > 1$, thus $Im(\tau)$ oscillate.
 
 It built an [Collatz j invariant explorer](https://spgarbet.github.io/collatz/collatz_j_invariants.html) to show these properties.
 
