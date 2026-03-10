@@ -6,7 +6,7 @@ $$3 = 2^0 \cdot 3^1 \cdot 5^0 \cdot 7^0 \dots = { 0, 1, 0, 0, \dots}$$
 
 where ${ \cdots }$ represents the Gödel encoding of the number as an ordered set as terms of prime numbers. 
 
-For 3, the odd step of Collatz is triggered and this results in $3 \cdot 3 +1 = 10 = { 1, 0, 1, 0, 0, \dots }$.  The even step eliminates the 2's and thbecomes $5 = {0, 0, 1, 0, 0, \dots }$. The odd gets triggered and $5 \cdot 3 + 1 = 16 = { 4, 0, 0, 0, \dots }$ with everything being a power of 2 and the even step eliminates this leaving the number '1'. The Collatz conjecture states that all integers will converage to 1. It's an unproven conjecture that has been a topic of research (and a great number of cranks claiming to have solved it as well). 
+For 3, the odd step of Collatz is triggered and this results in $3 \cdot 3 +1 = 10 = { 1, 0, 1, 0, 0, \dots }$.  The even step eliminates the 2's and thbecomes $5 = {0, 0, 1, 0, 0, \dots }$. The odd gets triggered and $5 \cdot 3 + 1 = 16 = { 4, 0, 0, 0, \dots }$ with everything being a power of 2 and the even step eliminates this leaving the number '1'. The Collatz conjecture states that all integers will converge to 1. It's an unproven conjecture that has been a topic of research (and a great number of cranks claiming to have solved it as well). 
 
 I asked Claude if there was anything that could be gain from this and there wasn't really much other than a summary about it being unsolved. It gave this summary,
 
@@ -14,11 +14,11 @@ I asked Claude if there was anything that could be gain from this and there wasn
 In the exponent-vector view, the pattern is: even steps are surgically simple; odd steps are chaotic reshufflings.
 ```
 
-I decided to prompt it further and ask if a $j$-function existed that described it. At this point Claude claimed that a relationship between Gödel encoding and the Monster group existed. In particular, it said the exponent vector lives in the $\mathcal{Z}^\infty$ lattice, the odd-step is a non-linear shear on that lattice and a $j$-function tracks modular orbits on 2D lattices. The odd step is almost a modular transformation but that the $+1$ breaks the group structure. It proposed the following:
+I decided to prompt it further and ask if a $j$-function existed that described it. At this point Claude claimed that a relationship between Gödel encoding and the Monster group existed. In particular, it said the exponent vector lives in the $\mathbb{Z}^\infty$ lattice, the odd-step is a non-linear shear on that lattice and a $j$-function tracks modular orbits on 2D lattices. The odd step is almost a modular transformation but that the $+1$ breaks the group structure. It proposed the following:
 
-$$J_{Collatz}(\mathbold{a}) = j\left( \frac{a_1 + i \cdot v_2 (3n + 1)}{a_0 + 1}  \right)$$
+$$J_{Collatz}(\mathbf{a}) = j\left( \frac{a_1 + i \cdot v_2 (3n + 1)}{a_0 + 1}  \right)$$
 
-where $v_w(3n+1)$ is the \emph{2-adic valuation} of 3n+1 (how many times 2 divides it after the odd step). This encodes the relationship into a complex function with:
+where $v_w(3n+1)$ is the *2-adic valuation* of 3n+1 (how many times 2 divides it after the odd step). This encodes the relationship into a complex function with:
 
 - **Real Part**: the ratio of the 3-exponent to the 2-expoenent (the "tilt" toward 3)
 - **Imaginary Part**: the guaranteed havlings after each odd step. 
@@ -43,7 +43,7 @@ With the following claims:
 
 4. There exists a fixed point attractor at $Im(\tau) = 1/2$. This is a universal terminal value, regardless of starting point or length.
 
-5. $E[ratio per step]$ \approx 1.39 > 1$, thus $Im(\tau)$ oscillate.
+5. $E[\text{ratio per step}]$ \approx 1.39 > 1$, thus $Im(\tau)$ oscillate.
 
 It built an [Collatz j invariant explorer](./collatz_j_invariants.html) to show these properties.
 
