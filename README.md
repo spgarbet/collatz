@@ -71,3 +71,5 @@ Claude gave me Code to search for factorization of an affine mapping that under 
 for sufficiently large $r$. The code posts a lot of verifications. I randomly found one for $r=21$. 
 
 If $r$ is sufficiently large, whatever that means, then this appears to constitute Claude claiming it solved the Collatz conjecture. I have serious doubts this is true at this point, and a LOT of verification is required. However, I am going to pursue it. It is more likely that this is yet another crank claim of solution to a famous problem.
+
+Heh, reading through it's logic it makes a circular assumption. This has some interesting elements, but ultimate runs into poor reasoning.
