@@ -45,7 +45,7 @@ With the following claims:
 
 5. $E[\text{ratio per step}]$ \approx 1.39 > 1$, thus $Im(\tau)$ oscillate.
 
-It built an [Collatz j invariant explorer](./collatz_j_invariants.html) to show these properties.
+It built an [Collatz j invariant explorer](https://spgarbet.github.io/collatz/collatz_j_invariants.html) to show these properties.
 
 My interpretation of these claims (_which need verification_), is that if a Collatz sequence terminates it is always at 1 for it's terminal value which is fairly well accepted. However, this shows a chaotic attractor at this final value. In chaos theory, this means that orbits tend to get pulled into this stable value but it doesn't preclude that some number exists for which a stable orbit outside of 1. Neither of these findings is surprising and really just describes the Collatz sequences in a Gödel space. Curiously many attempts at solving the conject basically end up in a similar space.
 

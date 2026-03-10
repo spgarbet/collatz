@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collatz Semigroup Relations Checker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --panel: #1a1d28;
+    --border: #252a3a;
+    --text: #c8ccd8;
+    --muted: #4a5068;
+    --bright: #e8ecf4;
+    --L: #5b9bd5;
+    --R: #d55b6a;
+    --Li: #5bd5a0;
+    --Ri: #d5a05b;
+    --gold: #f0c060;
+    --green: #60c080;
+    --red: #c06060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Crimson Pro', Georgia, serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 24px;
+    background: var(--surface);
+  }
+  header h1 { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--gold); letter-spacing: 0.3px; }
+  header p { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; height: calc(100vh - 61px); }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 18px; }
+
+  .slabel { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+
+  .gen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .gen-card { padding: 8px 10px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; border: 1px solid; }
+  .gen-card.L  { border-color: var(--L);  background: #1a2535; color: var(--L); }
+  .gen-card.R  { border-color: var(--R);  background: #2a1520; color: var(--R); }
+  .gen-card.Li { border-color: var(--Li); background: #152520; color: var(--Li); }
+  .gen-card.Ri { border-color: var(--Ri); background: #25200f; color: var(--Ri); }
+  .gen-card .sym { font-size: 15px; font-weight: 700; display: block; }
+  .gen-card .def { opacity: 0.8; }
+
+  .result-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8; }
+  .result-box .hi { color: var(--gold); }
+  .result-box .ok { color: var(--green); }
+  .result-box .bad { color: var(--red); }
+
+  .input-row { display: flex; gap: 6px; }
+  input[type=number], input[type=text] {
+    background: var(--panel); border: 1px solid var(--border); color: var(--bright);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 7px 10px;
+    border-radius: 3px; flex: 1; outline: none;
+  }
+  input:focus { border-color: var(--gold); }
+
+  button {
+    background: var(--gold); color: #0d0f14; border: none;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 7px 14px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); font-weight: 400; }
+  .btn-ghost:hover { background: var(--panel); opacity: 1; }
+
+  .qbtns { display: flex; flex-wrap: wrap; gap: 4px; }
+  .qbtns button { background: var(--panel); color: var(--text); border: 1px solid var(--border); font-size: 10px; padding: 4px 10px; font-weight: 400; }
+  .qbtns button:hover { border-color: var(--gold); color: var(--gold); opacity: 1; }
+
+  /* Main */
+  .main { overflow-y: auto; }
+
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 24px; }
+  .tab { background: transparent; color: var(--muted); border: none; border-bottom: 2px solid transparent; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 12px 18px; cursor: pointer; margin-bottom: -1px; transition: color 0.15s; }
+  .tab:hover { color: var(--text); opacity: 1; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .pane { display: none; padding: 24px; }
+  .pane.active { display: block; }
+
+  /* Word builder */
+  .word-area { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px; margin-bottom: 16px; }
+  .word-display { font-family: 'JetBrains Mono', monospace; font-size: 15px; min-height: 44px; background: var(--bg); border: 1px solid var(--border); padding: 10px 14px; margin-bottom: 12px; border-radius: 3px; line-height: 2; word-break: break-all; }
+  .word-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .word-btns button { font-size: 14px; font-weight: 700; padding: 8px 18px; }
+  .word-btns .bL  { background: var(--L); }
+  .word-btns .bR  { background: var(--R); }
+  .word-btns .bLi { background: var(--Li); }
+  .word-btns .bRi { background: var(--Ri); }
+
+  .affine-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .affine-card { background: var(--bg); border: 1px solid var(--border); padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border-radius: 3px; }
+  .affine-card .label { color: var(--muted); font-size: 10px; margin-bottom: 4px; }
+  .affine-card .formula { color: var(--bright); font-size: 14px; }
+  .affine-card .slope { color: var(--L); }
+  .affine-card .intercept { color: var(--R); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  th { background: var(--panel); color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 14px; text-align: left; font-weight: 400; position: sticky; top: 0; border-bottom: 1px solid var(--border); }
+  td { padding: 6px 14px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--surface); }
+
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 2px; font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .chip.ok  { background: #142514; color: var(--green); border: 1px solid #2a4a2a; }
+  .chip.bad { background: #251414; color: var(--red);   border: 1px solid #4a2a2a; }
+  .chip.neu { background: var(--panel); color: var(--muted); border: 1px solid var(--border); }
+
+  /* Relations */
+  .rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px; }
+  .rel-card h3 { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); margin-bottom: 10px; }
+  .rel-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .rel-row:last-child { border-bottom: none; }
+
+  .insight { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--gold); padding: 14px 16px; font-size: 13px; line-height: 1.75; margin: 12px 0; border-radius: 0 4px 4px 0; }
+  .insight strong { font-family: 'JetBrains Mono', monospace; color: var(--gold); }
+  .insight code { font-family: 'JetBrains Mono', monospace; background: var(--bg); padding: 1px 5px; border-radius: 2px; font-size: 12px; }
+
+  /* Enumeration */
+  .enum-controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .enum-controls label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  .cL  { color: var(--L); }
+  .cR  { color: var(--R); }
+  .cLi { color: var(--Li); }
+  .cRi { color: var(--Ri); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Collatz Semigroup ≅ Sub-Aff(ℤ[1/6]) — Relations Checker</h1>
+    <p>Every word in {L, R} computes an affine map f(x) = ax + b over ℤ[1/6]</p>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div>
+      <div class="slabel">Generators</div>
+      <div class="gen-grid">
+        <div class="gen-card L"><span class="sym">L</span><span class="def">x → x/2</span></div>
+        <div class="gen-card R"><span class="sym">R</span><span class="def">x → 3x+1</span></div>
+        <div class="gen-card Li"><span class="sym">L⁻¹</span><span class="def">x → 2x</span></div>
+        <div class="gen-card Ri"><span class="sym">R⁻¹</span><span class="def">x → (x−1)/3</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="slabel">The Core Result</div>
+      <div class="result-box">
+        <div class="hi">w(x) = ax + b</div>
+        <div>a = <span style="color:var(--L)">3ʳ / 2ˡ</span></div>
+        <div>b = <span style="color:var(--R)">order-dependent</span></div>
+        <div style="margin-top:6px">w₁ = w₂ iff</div>
+        <div class="ok">  same #L, #R</div>
+        <div class="ok">  same b</div>
+        <div style="margin-top:6px">Word problem: <span class="ok">DECIDABLE</span></div>
+        <div>Semigroup type: <span class="hi">Sub-Aff(ℤ[1/6])</span></div>
+        <div style="margin-top:6px; color:var(--muted); font-size:10px">NOT free · NOT Thompson F · NOT abelian</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="slabel">Test Starting Value</div>
+      <div class="input-row" style="margin-bottom:8px">
+        <input type="number" id="testN" value="1" min="1">
+        <button onclick="recompute()">Apply</button>
+      </div>
+      <div class="qbtns">
+        <button onclick="setTestN(1)">1</button>
+        <button onclick="setTestN(3)">3</button>
+        <button onclick="setTestN(7)">7</button>
+        <button onclick="setTestN(27)">27</button>
+        <button onclick="setTestN(0.5)">1/2</button>
+        <button onclick="setTestN(0.333)">1/3</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="slabel">Affine Group Law</div>
+      <div class="result-box" style="font-size:10px">
+        <div><span class="hi">Aff(ℤ[1/6])</span> = {x↦ax+b}</div>
+        <div style="margin-top:4px">Compose (a₁,b₁)∘(a₂,b₂):</div>
+        <div style="color:var(--text)">(a₁·a₂ , a₁·b₂ + b₁)</div>
+        <div style="margin-top:4px">Identity: (1, 0)</div>
+        <div>Inverse of (a,b): (1/a, −b/a)</div>
+        <div style="margin-top:6px; color:var(--muted)">L → (½, 0)  R → (3, 1)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('word-pane', this)">Word Builder</button>
+      <button class="tab" onclick="switchTab('rel-pane', this)">Relations</button>
+      <button class="tab" onclick="switchTab('enum-pane', this)">Enumerate Words</button>
+      <button class="tab" onclick="switchTab('equiv-pane', this)">Equivalences</button>
+    </div>
+
+    <!-- WORD BUILDER -->
+    <div id="word-pane" class="pane active">
+      <div class="word-area">
+        <div class="slabel">Current Word</div>
+        <div class="word-display" id="wordDisp">ε &nbsp;<span style="color:var(--muted);font-size:12px">(identity)</span></div>
+        <div class="word-btns">
+          <button class="bL"  onclick="push('L')">L</button>
+          <button class="bR"  onclick="push('R')">R</button>
+          <button class="bLi" onclick="push('Li')">L⁻¹</button>
+          <button class="bRi" onclick="push('Ri')">R⁻¹</button>
+          <button class="btn-ghost" onclick="pop()">⌫</button>
+          <button class="btn-ghost" onclick="clearW()">Clear</button>
+        </div>
+
+        <div class="affine-display" id="affineDisp">
+          <div class="affine-card">
+            <div class="label">Slope a = 3ʳ/2ˡ</div>
+            <div class="formula slope" id="slopeVal">1</div>
+          </div>
+          <div class="affine-card">
+            <div class="label">Intercept b</div>
+            <div class="formula intercept" id="interceptVal">0</div>
+          </div>
+          <div class="affine-card">
+            <div class="label">f(x) = ax + b</div>
+            <div class="formula" id="formulaVal">f(x) = x</div>
+          </div>
+          <div class="affine-card">
+            <div class="label">Applied to x = <span id="testNDisp">1</span></div>
+            <div class="formula" id="resultVal" style="color:var(--gold)">1</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button onclick="checkIdentity()">Check = Identity?</button>
+          <button onclick="computeInverse()">Compute Inverse</button>
+          <button class="btn-ghost" onclick="loadCollatz()">Load Collatz sequence</button>
+          <input type="number" id="collatzN" value="7" min="1" style="width:70px">
+        </div>
+        <div id="identityResult" style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
+      </div>
+
+      <div class="insight">
+        <strong>Key finding:</strong> Every word in {L, R, L⁻¹, R⁻¹} acts as an <strong>affine map</strong> <code>f(x) = ax + b</code> over ℤ[1/6]. Two words are equal iff they have the same slope <em>and</em> intercept. The semigroup is therefore isomorphic to a sub-semigroup of <code>Aff(ℤ[1/6])</code>, not a free semigroup. The word problem is <strong>decidable</strong> — just compute (a,b) and compare.
+      </div>
+
+      <div id="wordTrace"></div>
+    </div>
+
+    <!-- RELATIONS -->
+    <div id="rel-pane" class="pane">
+      <div class="insight" style="margin-bottom:16px">
+        Relations are checked symbolically via the affine map (a,b). A relation <code>w = identity</code> holds iff <code>a=1, b=0</code>. A relation <code>w₁ = w₂</code> holds iff both words produce the same (a,b).
+      </div>
+      <div class="rel-grid" id="relGrid"></div>
+    </div>
+
+    <!-- ENUMERATE -->
+    <div id="enum-pane" class="pane">
+      <div class="enum-controls">
+        <label>Max length:</label>
+        <input type="number" id="enumLen" value="5" min="1" max="8" style="width:60px">
+        <label>Generators:</label>
+        <select id="enumGens" style="background:var(--panel);color:var(--text);border:1px solid var(--border);padding:6px;font-family:'JetBrains Mono',monospace;font-size:11px">
+          <option value="LR">L, R only (semigroup)</option>
+          <option value="LRLiRi">L, R, L⁻¹, R⁻¹ (group)</option>
+        </select>
+        <button onclick="runEnum()">Enumerate</button>
+      </div>
+      <div id="enumResult"></div>
+    </div>
+
+    <!-- EQUIVALENCES -->
+    <div id="equiv-pane" class="pane">
+      <div class="insight" style="margin-bottom:16px">
+        Words with the same (a,b) are <strong>equal</strong> in the semigroup. The number of distinct words of length n with r R's and l L's equals the number of distinct intercepts, which equals C(r+l, r) — the full binomial coefficient. So <strong>no two distinct orderings of the same (r,l) letters give the same affine map</strong>.
+      </div>
+      <div class="enum-controls">
+        <label>#R:</label>
+        <input type="number" id="eqR" value="2" min="0" max="5" style="width:55px">
+        <label>#L:</label>
+        <input type="number" id="eqL" value="3" min="0" max="5" style="width:55px">
+        <button onclick="runEquiv()">Show All Words</button>
+      </div>
+      <div id="equivResult"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── Exact rational arithmetic ───────────────────────────────────────────────
+
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { let t = b; b = a % b; a = t; }
+  return a || 1;
+}
+
+class Q {
+  constructor(p, q = 1) {
+    if (!Number.isInteger(p) || !Number.isInteger(q)) {
+      // Handle float input approximately
+      const scale = 10000;
+      p = Math.round(p * scale); q = Math.round(q * scale);
+    }
+    if (q < 0) { p = -p; q = -q; }
+    const g = gcd(Math.abs(p), q);
+    this.p = p / g; this.q = q / g;
+  }
+  add(o) { return new Q(this.p * o.q + o.p * this.q, this.q * o.q); }
+  sub(o) { return new Q(this.p * o.q - o.p * this.q, this.q * o.q); }
+  mul(o) { return new Q(this.p * o.p, this.q * o.q); }
+  div(o) { return new Q(this.p * o.q, this.q * o.p); }
+  eq(o)  { return this.p === o.p && this.q === o.q; }
+  toF()  { return this.p / this.q; }
+  str()  { return this.q === 1 ? String(this.p) : `${this.p}/${this.q}`; }
+  isInt(){ return this.q === 1; }
+}
+
+const q = (p, d=1) => new Q(p, d);
+const Q0 = q(0), Q1 = q(1), Q2 = q(2), Q3 = q(3);
+
+// ─── Affine maps: (a, b) means f(x) = a*x + b ────────────────────────────────
+
+function affineL()  { return [q(1,2), Q0]; }
+function affineR()  { return [Q3,    Q1]; }
+function affineLi() { return [Q2,    Q0]; }
+function affineRi() { return [q(1,3), q(-1,3)]; }
+
+function affineCompose(f1, f2) {
+  // f1 ∘ f2: first apply f2, then f1
+  // f1(f2(x)) = a1*(a2*x+b2)+b1 = a1*a2*x + a1*b2+b1
+  const [a1,b1] = f1, [a2,b2] = f2;
+  return [a1.mul(a2), a1.mul(b2).add(b1)];
+}
+
+function affineIdentity() { return [Q1, Q0]; }
+
+function affineApply([a, b], x) {
+  if (typeof x === 'number') x = q(Math.round(x * 1000), 1000);
+  return a.mul(x).add(b);
+}
+
+function genAffine(letter) {
+  switch(letter) {
+    case 'L':   return affineL();
+    case 'R':   return affineR();
+    case 'Li':  return affineLi();
+    case 'Ri':  return affineRi();
+  }
+}
+
+function wordToAffine(word) {
+  // word is array of letter strings
+  let f = affineIdentity();
+  for (const letter of word) {
+    f = affineCompose(genAffine(letter), f);
+  }
+  return f;
+}
+
+function wordToAffineRight(word) {
+  // Apply left to right: first letter applied first
+  let f = affineIdentity();
+  for (const letter of word) {
+    f = affineCompose(f, genAffine(letter));
+    // Actually: if we apply left-to-right, f_new(x) = g(f(x))
+    // = g ∘ f where g = new gen, f = accumulated
+    // compose(g, f)(x) = g(f(x)) ✓
+  }
+  return f;
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentWord = [];
+
+function getTestN() {
+  const v = parseFloat(document.getElementById('testN').value);
+  return isNaN(v) ? 1 : v;
+}
+
+// ─── Word builder ─────────────────────────────────────────────────────────────
+
+function push(l) { currentWord.push(l); updateWordUI(); }
+function pop()   { currentWord.pop(); updateWordUI(); }
+function clearW(){ currentWord = []; updateWordUI(); document.getElementById('identityResult').innerHTML = ''; document.getElementById('wordTrace').innerHTML = ''; }
+
+function letterHTML(l) {
+  const cls = { L: 'cL', R: 'cR', Li: 'cLi', Ri: 'cRi' };
+  return `<span class="${cls[l]}">${l}</span>`;
+}
+
+function updateWordUI() {
+  const wd = document.getElementById('wordDisp');
+  const n = getTestN();
+  document.getElementById('testNDisp').textContent = n;
+
+  if (currentWord.length === 0) {
+    wd.innerHTML = 'ε &nbsp;<span style="color:var(--muted);font-size:12px">(identity)</span>';
+    document.getElementById('slopeVal').textContent = '1';
+    document.getElementById('interceptVal').textContent = '0';
+    document.getElementById('formulaVal').textContent = 'f(x) = x';
+    document.getElementById('resultVal').textContent = n;
+    return;
+  }
+
+  wd.innerHTML = currentWord.map(letterHTML).join(' · ');
+
+  const [a, b] = wordToAffineRight(currentWord);
+  document.getElementById('slopeVal').textContent = a.str();
+  document.getElementById('interceptVal').textContent = b.str();
+
+  const slope = a.str() === '1' ? '' : `${a.str()}·`;
+  const inter = b.q === 1 && b.p === 0 ? '' : (b.p > 0 ? ` + ${b.str()}` : ` − ${q(-b.p, b.q).str()}`);
+  document.getElementById('formulaVal').textContent = `f(x) = ${slope}x${inter}`;
+
+  const xQ = q(Math.round(n * 10000), 10000);
+  const result = affineApply([a, b], xQ);
+  document.getElementById('resultVal').textContent = result.str() + (result.isInt() ? '' : ` ≈ ${result.toF().toFixed(4)}`);
+
+  // Trace
+  renderTrace(currentWord, n);
+}
+
+function renderTrace(word, n) {
+  if (word.length === 0) { document.getElementById('wordTrace').innerHTML = ''; return; }
+  let xQ = q(Math.round(n * 10000), 10000);
+  let html = `<table><thead><tr><th>step</th><th>gen</th><th>x before</th><th>x after</th><th>affine so far</th></tr></thead><tbody>`;
+  let cumF = affineIdentity();
+  for (let i = 0; i < word.length; i++) {
+    const l = word[i];
+    const g = genAffine(l);
+    const xNext = affineApply(g, xQ);
+    cumF = affineCompose(g, cumF);
+    const cls = { L:'cL', R:'cR', Li:'cLi', Ri:'cRi' }[l];
+    html += `<tr>
+      <td>${i+1}</td>
+      <td class="${cls}">${l}</td>
+      <td>${xQ.str()}</td>
+      <td>${xNext.str()}</td>
+      <td style="color:var(--muted)">(${cumF[0].str()})x + (${cumF[1].str()})</td>
+    </tr>`;
+    xQ = xNext;
+  }
+  html += `</tbody></table>`;
+  document.getElementById('wordTrace').innerHTML = html;
+}
+
+function checkIdentity() {
+  const [a, b] = wordToAffineRight(currentWord);
+  const isId = a.eq(Q1) && b.eq(Q0);
+  const rDiv = document.getElementById('identityResult');
+  if (currentWord.length === 0) {
+    rDiv.innerHTML = `<span style="color:var(--muted)">Empty word is trivially the identity.</span>`;
+    return;
+  }
+  if (isId) {
+    rDiv.innerHTML = `<span style="color:var(--green)">✓ This word equals the identity: f(x) = x</span>`;
+  } else {
+    rDiv.innerHTML = `<span style="color:var(--red)">✗ Not the identity. f(x) = ${a.str()}x + ${b.str()}</span>`;
+  }
+}
+
+function computeInverse() {
+  if (currentWord.length === 0) return;
+  const [a, b] = wordToAffineRight(currentWord);
+  // Inverse of (a,b): x = (y-b)/a, so inv(y) = (1/a)y + (-b/a)
+  const invA = Q1.div(a);
+  const invB = b.mul(q(-1)).div(a);
+  const rDiv = document.getElementById('identityResult');
+  rDiv.innerHTML = `Inverse affine map: f⁻¹(x) = <span style="color:var(--Li)">${invA.str()}</span>x + <span style="color:var(--Ri)">${invB.str()}</span>`;
+}
+
+function loadCollatz() {
+  const n = parseInt(document.getElementById('collatzN').value);
+  if (isNaN(n) || n < 1) return;
+  currentWord = [];
+  let x = n;
+  while (x !== 1 && currentWord.length < 200) {
+    if (x % 2 === 0) { currentWord.push('L'); x = x / 2; }
+    else              { currentWord.push('R'); x = 3*x + 1; }
+  }
+  updateWordUI();
+}
+
+function recompute() { updateWordUI(); }
+function setTestN(v) { document.getElementById('testN').value = v; updateWordUI(); }
+
+// ─── Relations ────────────────────────────────────────────────────────────────
+
+function checkRelations() {
+  const relations = [
+    {
+      name: "L · L⁻¹ = ε",
+      lhs: ['L','Li'], rhs: [],
+      desc: "L and L⁻¹ are true inverses"
+    },
+    {
+      name: "L⁻¹ · L = ε",
+      lhs: ['Li','L'], rhs: [],
+      desc: "Inverse cancels forward"
+    },
+    {
+      name: "R · R⁻¹ = ε",
+      lhs: ['R','Ri'], rhs: [],
+      desc: "R and R⁻¹ are true inverses"
+    },
+    {
+      name: "R⁻¹ · R = ε",
+      lhs: ['Ri','R'], rhs: [],
+      desc: "Inverse cancels forward"
+    },
+    {
+      name: "L · R ≠ R · L",
+      lhs: ['L','R'], rhs: ['R','L'],
+      negate: true,
+      desc: "L and R do not commute"
+    },
+    {
+      name: "L² · R = R · L (Thompson F?)",
+      lhs: ['L','L','R'], rhs: ['R','L'],
+      desc: "Defining relation of Thompson F"
+    },
+    {
+      name: "L · R · L⁻¹ · R⁻¹ = ε (abelian?)",
+      lhs: ['L','R','Li','Ri'], rhs: [],
+      desc: "Commutator = identity iff abelian"
+    },
+    {
+      name: "R · L · R⁻¹ = L² (conjugation)",
+      lhs: ['R','L','Ri'], rhs: ['L','L'],
+      desc: "Conjugation by R squares L"
+    },
+    {
+      name: "(L·R)² = (R·L)²",
+      lhs: ['L','R','L','R'], rhs: ['R','L','R','L'],
+      desc: "Braid-like square relation"
+    },
+    {
+      name: "L⁻¹ · R · L = ? (3-slope shift)",
+      lhs: ['Li','R','L'], rhs: [],
+      desc: "Conjugation of R by L"
+    },
+  ];
+
+  let html = '';
+  relations.forEach(rel => {
+    const lhsF = wordToAffineRight(rel.lhs);
+    const rhsF = wordToAffineRight(rel.rhs);
+    const holds = lhsF[0].eq(rhsF[0]) && lhsF[1].eq(rhsF[1]);
+    const result = rel.negate ? !holds : holds;
+
+    const lhsStr = rel.lhs.length === 0 ? 'ε' : rel.lhs.map(l => `<span class="${{L:'cL',R:'cR',Li:'cLi',Ri:'cRi'}[l]}">${l}</span>`).join('·');
+    const rhsStr = rel.rhs.length === 0 ? 'ε' : rel.rhs.map(l => `<span class="${{L:'cL',R:'cR',Li:'cLi',Ri:'cRi'}[l]}">${l}</span>`).join('·');
+    const lhsAff = `(${lhsF[0].str()})x+(${lhsF[1].str()})`;
+    const rhsAff = `(${rhsF[0].str()})x+(${rhsF[1].str()})`;
+
+    html += `<div class="rel-card">
+      <h3>${rel.name}</h3>
+      <div class="rel-row"><span>${lhsStr} →</span><span style="color:var(--muted);font-size:10px">${lhsAff}</span></div>
+      <div class="rel-row"><span>${rhsStr} →</span><span style="color:var(--muted);font-size:10px">${rhsAff}</span></div>
+      <div class="rel-row"><span style="color:var(--muted)">${rel.desc}</span><span class="chip ${result?'ok':'bad'}">${result ? '✓ holds' : '✗ fails'}</span></div>
+    </div>`;
+  });
+
+  document.getElementById('relGrid').innerHTML = html;
+}
+
+// ─── Enumerate ────────────────────────────────────────────────────────────────
+
+function runEnum() {
+  const maxLen = parseInt(document.getElementById('enumLen').value) || 5;
+  const genStr = document.getElementById('enumGens').value;
+  const genList = genStr === 'LR' ? ['L','R'] : ['L','R','Li','Ri'];
+  const invMap = { L:'Li', Li:'L', R:'Ri', Ri:'R' };
+
+  // Enumerate and collect (a,b) -> [words]
+  const seen = new Map();
+
+  function enumerate(word) {
+    if (word.length > 0) {
+      const [a,b] = wordToAffineRight(word);
+      const key = `${a.str()}|${b.str()}`;
+      if (!seen.has(key)) seen.set(key, []);
+      seen.get(key).push(word.join(''));
+    }
+    if (word.length >= maxLen) return;
+    for (const g of genList) {
+      if (word.length > 0 && invMap[word[word.length-1]] === g) continue; // skip trivial cancellation
+      enumerate([...word, g]);
+    }
+  }
+  enumerate([]);
+
+  // Find equivalences
+  const equivClasses = [...seen.values()].filter(ws => ws.length > 1);
+  equivClasses.sort((a,b) => a[0].length - b[0].length);
+
+  let html = `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px">
+    ${seen.size} distinct affine maps from ${[...seen.values()].reduce((s,ws)=>s+ws.length,0)} words up to length ${maxLen}
+    · ${equivClasses.length} non-trivial equivalence classes found
+  </div>`;
+
+  if (equivClasses.length === 0) {
+    html += `<div class="insight">No equivalences found up to length ${maxLen}. All words produce distinct affine maps.</div>`;
+  } else {
+    html += `<table><thead><tr><th>equivalent words</th><th>affine map f(x)=ax+b</th><th>#L</th><th>#R</th></tr></thead><tbody>`;
+    equivClasses.slice(0, 30).forEach(words => {
+      const [a,b] = wordToAffineRight(words[0].split(''));
+      const nL = words[0].split('').filter(c=>c==='L').length;
+      const nR = words[0].split('').filter(c=>c==='R').length;
+      const wHTML = words.slice(0,4).map(w => {
+        return w.split('').map(c => {
+          const cls = c==='L'?'cL':c==='R'?'cR':'';
+          return `<span class="${cls}">${c}</span>`;
+        }).join('');
+      }).join(' = ');
+      html += `<tr>
+        <td>${wHTML}${words.length>4?` <span style="color:var(--muted)">+${words.length-4} more</span>`:''}</td>
+        <td style="color:var(--muted)">${a.str()}x + ${b.str()}</td>
+        <td class="cL">${nL}</td>
+        <td class="cR">${nR}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById('enumResult').innerHTML = html;
+}
+
+// ─── Equivalences ─────────────────────────────────────────────────────────────
+
+function runEquiv() {
+  const r = parseInt(document.getElementById('eqR').value) || 0;
+  const l = parseInt(document.getElementById('eqL').value) || 0;
+
+  // Generate all words with exactly r R's and l L's
+  const template = 'R'.repeat(r) + 'L'.repeat(l);
+  const perms = new Set();
+
+  function permute(arr, start = 0) {
+    if (start === arr.length - 1) { perms.add(arr.join('')); return; }
+    for (let i = start; i < arr.length; i++) {
+      [arr[start], arr[i]] = [arr[i], arr[start]];
+      permute(arr, start + 1);
+      [arr[start], arr[i]] = [arr[i], arr[start]];
+    }
+  }
+  permute(template.split(''));
+
+  const words = [...perms].sort();
+  const binom = comb(r+l, r);
+
+  const rows = words.map(w => {
+    const [a, b] = wordToAffineRight(w.split(''));
+    return { w, a, b };
+  });
+  rows.sort((x,y) => x.b.toF() - y.b.toF());
+
+  // Check if all intercepts are distinct
+  const bVals = new Set(rows.map(r => r.b.str()));
+  const allDistinct = bVals.size === words.size;
+
+  let html = `<div class="insight" style="margin-bottom:14px">
+    <strong>r=${r}, l=${l}:</strong> C(${r+l}, ${r}) = ${binom} arrangements.
+    Slope a = 3<sup>${r}</sup>/2<sup>${l}</sup> = ${new Q(3**r, 2**l).str()} fixed for all.
+    ${bVals.size} distinct intercepts found.
+    ${bVals.size === binom ? '<span style="color:var(--green)">✓ All arrangements give distinct maps.</span>' : '<span style="color:var(--red)">⚠ Some arrangements coincide.</span>'}
+  </div>`;
+
+  html += `<table><thead><tr><th>word</th><th>slope a</th><th>intercept b</th><th>f(x) = ax+b</th></tr></thead><tbody>`;
+  rows.forEach(({ w, a, b }) => {
+    const wHTML = w.split('').map(c => `<span class="${c==='R'?'cR':'cL'}">${c}</span>`).join('');
+    const bFloat = b.toF().toFixed(4);
+    html += `<tr>
+      <td>${wHTML}</td>
+      <td class="cL">${a.str()}</td>
+      <td class="cR">${b.str()} <span style="color:var(--muted);font-size:10px">(≈${bFloat})</span></td>
+      <td style="color:var(--muted)">${a.str()}x + ${b.str()}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById('equivResult').innerHTML = html;
+}
+
+function comb(n, k) {
+  if (k > n) return 0;
+  let r = 1;
+  for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+  return Math.round(r);
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'rel-pane') checkRelations();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  updateWordUI();
+  checkRelations();
+});
+</script>
+</body>
+</html>

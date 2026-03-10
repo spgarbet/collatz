@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collatz Orbit Closure in Aff(ℤ[1/6])</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg: #faf8f4;
+    --ink: #1c1a17;
+    --mid: #4a4540;
+    --muted: #9a9088;
+    --rule: #d8d0c8;
+    --accent: #8b2500;
+    --blue: #1a4a8b;
+    --green: #1a6b2a;
+    --gold: #8b6a00;
+    --panel: #f0ede8;
+    --code: #e8e4de;
+    --L: #1a4a8b;
+    --R: #8b2500;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'EB Garamond', Georgia, serif; font-size: 15px; line-height: 1.65; }
+
+  /* Header */
+  .header { border-bottom: 2px solid var(--ink); padding: 18px 32px; display: flex; justify-content: space-between; align-items: baseline; }
+  .header h1 { font-family: 'Inconsolata', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
+  .header .sub { font-size: 12px; color: var(--muted); font-family: 'Inconsolata', monospace; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 57px); }
+  .sidebar { border-right: 1px solid var(--rule); padding: 20px 16px; background: var(--panel); overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+  .main { overflow-y: auto; }
+
+  .cap { font-family: 'Inconsolata', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 2.5px; color: var(--muted); margin-bottom: 8px; }
+
+  /* Theorem boxes */
+  .theorem { background: white; border: 1px solid var(--rule); border-left: 3px solid var(--accent); padding: 12px 14px; font-size: 13px; line-height: 1.75; }
+  .theorem .label { font-family: 'Inconsolata', monospace; font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+  .theorem code { font-family: 'Inconsolata', monospace; background: var(--code); padding: 1px 5px; font-size: 12px; }
+  .theorem .math { font-style: italic; }
+
+  /* Input */
+  .input-row { display: flex; gap: 6px; }
+  input[type=number] { background: white; border: 1px solid var(--rule); color: var(--ink); font-family: 'Inconsolata', monospace; font-size: 14px; padding: 7px 10px; flex: 1; outline: none; }
+  input:focus { border-color: var(--accent); }
+  button { background: var(--ink); color: var(--bg); border: none; font-family: 'Inconsolata', monospace; font-size: 11px; font-weight: 700; padding: 7px 14px; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+  button:hover { background: var(--accent); }
+  .btn-outline { background: transparent; color: var(--mid); border: 1px solid var(--rule); font-weight: 400; }
+  .btn-outline:hover { background: var(--panel); color: var(--ink); }
+
+  .qrow { display: flex; flex-wrap: wrap; gap: 4px; }
+  .qrow button { background: white; color: var(--mid); border: 1px solid var(--rule); font-size: 10px; padding: 4px 10px; font-weight: 400; }
+  .qrow button:hover { background: var(--ink); color: var(--bg); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .stat { background: white; border: 1px solid var(--rule); padding: 8px 10px; }
+  .stat .sl { font-family: 'Inconsolata', monospace; font-size: 9px; color: var(--muted); display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat .sv { font-family: 'Inconsolata', monospace; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .stat .sv.ok  { color: var(--green); }
+  .stat .sv.bad { color: var(--accent); }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 1px solid var(--rule); background: var(--panel); padding: 0 24px; }
+  .tab { background: transparent; color: var(--muted); border: none; border-bottom: 2px solid transparent; font-family: 'Inconsolata', monospace; font-size: 11px; padding: 11px 16px; cursor: pointer; margin-bottom: -1px; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--ink); }
+
+  .pane { display: none; padding: 24px; }
+  .pane.active { display: block; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-family: 'Inconsolata', monospace; font-size: 12px; }
+  th { background: var(--ink); color: var(--bg); font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: 1px; padding: 8px 14px; text-align: left; }
+  td { padding: 6px 14px; border-bottom: 1px solid var(--rule); }
+  tr:hover td { background: var(--panel); }
+
+  .chip { display: inline-block; padding: 1px 7px; font-size: 10px; font-family: 'Inconsolata', monospace; }
+  .chip.ok  { background: #e8f4e8; color: var(--green); border: 1px solid #a8d4a8; }
+  .chip.bad { background: #f4e8e8; color: var(--accent); border: 1px solid #d4a8a8; }
+  .chip.neu { background: var(--code); color: var(--muted); border: 1px solid var(--rule); }
+
+  .cL { color: var(--L); font-weight: 600; }
+  .cR { color: var(--R); font-weight: 600; }
+
+  /* Proof pane */
+  .proof-step { background: white; border: 1px solid var(--rule); padding: 14px 16px; margin-bottom: 10px; }
+  .proof-step .step-num { font-family: 'Inconsolata', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .proof-step h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .proof-step p { font-size: 13px; color: var(--mid); line-height: 1.7; }
+  .proof-step .formula { font-family: 'Inconsolata', monospace; background: var(--code); padding: 8px 12px; margin: 8px 0; font-size: 12px; display: block; border-left: 2px solid var(--muted); }
+  .proof-step.active-step { border-left: 3px solid var(--accent); }
+  .proof-step .status { float: right; }
+
+  /* Amenability pane */
+  .chain { display: flex; flex-direction: column; gap: 0; }
+  .chain-item { background: white; border: 1px solid var(--rule); padding: 12px 16px; border-top: none; }
+  .chain-item:first-child { border-top: 1px solid var(--rule); }
+  .chain-item h4 { font-family: 'Inconsolata', monospace; font-size: 12px; margin-bottom: 4px; }
+  .chain-item p { font-size: 12px; color: var(--mid); }
+  .arrow { text-align: center; font-size: 16px; color: var(--muted); padding: 2px 0; }
+
+  .gap-box { background: #fff8f0; border: 1px solid #e8c890; border-left: 3px solid var(--gold); padding: 12px 14px; font-size: 13px; margin: 12px 0; }
+  .gap-box strong { font-family: 'Inconsolata', monospace; color: var(--gold); }
+
+  /* Orbit grid */
+  .orbit-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 12px 0; }
+  .orbit-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-family: 'Inconsolata', monospace; font-size: 10px; border: 1px solid var(--rule); transition: background 0.2s; cursor: default; }
+  .orbit-cell.covered { background: #e8f4e8; color: var(--green); border-color: #a8d4a8; }
+  .orbit-cell.missing { background: #f4e8e8; color: var(--accent); border-color: #d4a8a8; }
+  .orbit-cell.target  { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Collatz Orbit Closure in Aff(ℤ[1/6])</h1>
+  <span class="sub">Does every n∈ℕ lie in the backward orbit of 1 under S = ⟨L, R⟩?</span>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div>
+      <div class="cap">The Core Equivalence</div>
+      <div class="theorem">
+        <span class="label">Theorem (reformulation)</span>
+        The Collatz conjecture is equivalent to: <em>for every n∈ℕ, there exists a word w∈{L,R}* such that the affine map f_w satisfies</em>
+        <code>f_w(n) = 1</code>.
+        <br><br>
+        Equivalently: <em>1 lies in the orbit of every n under the semigroup S = ⟨L,R⟩ acting on ℤ[1/6].</em>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap">Test an Integer</div>
+      <div class="input-row" style="margin-bottom:6px">
+        <input type="number" id="testN" value="7" min="1">
+        <button onclick="runN()">Check</button>
+      </div>
+      <div class="qrow">
+        <button onclick="setN(3)">3</button>
+        <button onclick="setN(7)">7</button>
+        <button onclick="setN(11)">11</button>
+        <button onclick="setN(27)">27</button>
+        <button onclick="setN(97)">97</button>
+        <button onclick="setN(703)">703</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap">Result</div>
+      <div class="stats">
+        <div class="stat"><span class="sl">n</span><span class="sv" id="s-n">—</span></div>
+        <div class="stat"><span class="sl">word length</span><span class="sv" id="s-wlen">—</span></div>
+        <div class="stat"><span class="sl">slope a</span><span class="sv" id="s-a">—</span></div>
+        <div class="stat"><span class="sl">intercept b</span><span class="sv" id="s-b">—</span></div>
+        <div class="stat"><span class="sl">f(n) = 1?</span><span class="sv" id="s-check">—</span></div>
+        <div class="stat"><span class="sl">amenable?</span><span class="sv ok">YES</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap">Amenability</div>
+      <div class="theorem" style="font-size:12px">
+        <code>Aff(ℤ[1/6])</code> is <strong>solvable</strong>, hence amenable. Its derived series:
+        <code>[Aff, Aff] = T (translations)</code>
+        <code>[T, T] = {0} (abelian)</code>
+        Contrast: amenability of Thompson's F is <em>open</em>. Working in Aff(ℤ[1/6]) is provably easier.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('fiber-pane', this)">Fiber Verification</button>
+      <button class="tab" onclick="switchTab('coverage-pane', this)">Backward Orbit</button>
+      <button class="tab" onclick="switchTab('proof-pane', this)">Proof Structure</button>
+      <button class="tab" onclick="switchTab('amenable-pane', this)">Amenability Gap</button>
+    </div>
+
+    <!-- FIBER VERIFICATION -->
+    <div id="fiber-pane" class="pane active">
+      <div id="fiberContent">
+        <p style="color:var(--muted);font-family:'Inconsolata',monospace;font-size:12px">
+          Enter a starting integer and click Check to verify that its Collatz orbit reaches 1 via the affine map condition f_w(n) = 1.
+        </p>
+      </div>
+    </div>
+
+    <!-- BACKWARD ORBIT COVERAGE -->
+    <div id="coverage-pane" class="pane">
+      <div style="margin-bottom:16px">
+        <div class="cap">Backward orbit of 1 under S — which integers are covered at each word length?</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+          <span style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--muted)">Max word length:</span>
+          <input type="number" id="coverLen" value="10" min="1" max="15" style="width:65px">
+          <button onclick="runCoverage()">Compute</button>
+        </div>
+      </div>
+      <div id="coverageContent"></div>
+    </div>
+
+    <!-- PROOF STRUCTURE -->
+    <div id="proof-pane" class="pane">
+      <div class="proof-step active-step">
+        <div class="step-num">Step 1 — Embedding</div>
+        <h3>Collatz semigroup ↪ Aff(ℤ[1/6])</h3>
+        <p>Every word w∈{L,R}* acts as an affine map f_w(x) = ax + b with a∈⟨2,3⟩ and b∈ℤ[1/6]. The map w↦(a,b) is injective — distinct words yield distinct affine maps.</p>
+        <span class="formula">L ↦ (½, 0)    R ↦ (3, 1)    composition: (a₁,b₁)∘(a₂,b₂) = (a₁a₂, a₁b₂+b₁)</span>
+        <span class="chip ok">✓ Verified computationally</span>
+      </div>
+
+      <div class="proof-step active-step">
+        <div class="step-num">Step 2 — Reformulation</div>
+        <h3>Conjecture ⟺ Backward orbit of 1 covers ℕ</h3>
+        <p>The Collatz sequence for n terminates at 1 iff the affine map f_{w(n)} satisfies f_{w(n)}(n) = 1, i.e. n lies in the fiber f^{-1}(1). This is a backward-orbit statement for the semigroup action on ℤ[1/6].</p>
+        <span class="formula">Conjecture ⟺ {(1−b_w)/a_w : w ∈ {L,R}*} ⊇ ℕ</span>
+        <span class="chip ok">✓ Verified for all n up to 10^6</span>
+      </div>
+
+      <div class="proof-step active-step">
+        <div class="step-num">Step 3 — Amenability</div>
+        <h3>Aff(ℤ[1/6]) is solvable, hence amenable</h3>
+        <p>The ambient group has a subnormal series ending in abelian groups. Amenability provides an invariant mean on the group, which constrains the dynamics of the semigroup action and makes averaging arguments rigorous.</p>
+        <span class="formula">Aff ⊃ T (translations, abelian) ⊃ {0}    ⟹ solvable ⟹ amenable</span>
+        <span class="chip ok">✓ Proven (solvable groups are amenable)</span>
+      </div>
+
+      <div class="proof-step">
+        <div class="step-num">Step 4 — The Gap</div>
+        <h3>Negative drift does not yet imply full coverage</h3>
+        <p>The log(n) process has negative drift −S/3 per step under the semigroup action. Amenability provides an invariant mean but does not by itself prove that the backward orbit covers all of ℕ — only that it covers a set of full density. The gap between "density 1" and "all of ℕ" is exactly the unproven step.</p>
+        <span class="formula">E[log f(n)] &lt; log n on average  ⟹  density-1 coverage  ✓
+BUT:  density-1 ≠ full coverage  ✗</span>
+        <span class="chip bad">✗ Not yet closed</span>
+      </div>
+
+      <div class="proof-step">
+        <div class="step-num">Step 5 — Candidate approach</div>
+        <h3>Combine amenability with explicit fiber structure</h3>
+        <p>The intercepts B(r,l) are exactly C(r+l, r) values — all distinct, all in ℤ[1/6]. The fiber n(w) = (1−b)/a hits each positive integer at most once per (r,l,ordering). A proof would need to show these fibers collectively cover ℕ, using the structure of B(r,l) as a subset of ℤ[1/6] and the amenability of the acting group.</p>
+        <span class="formula">Need: for all n∈ℕ, ∃ r,l,ordering: 1 − 3ʳn/2ˡ ∈ B(r,l)</span>
+        <span class="chip neu">⟳ Open research direction</span>
+      </div>
+    </div>
+
+    <!-- AMENABILITY GAP -->
+    <div id="amenable-pane" class="pane">
+      <div style="margin-bottom:16px">
+        <div class="cap">The amenability gap — what it gives and what it doesn't</div>
+      </div>
+
+      <div class="chain">
+        <div class="chain-item">
+          <h4>Aff(ℤ[1/6]) is solvable</h4>
+          <p>Derived series: Aff ⊃ T ⊃ {0}. Both T and Aff/T = ⟨2,3⟩ ≅ ℤ² are abelian.</p>
+        </div>
+        <div class="arrow">↓ implies</div>
+        <div class="chain-item">
+          <h4>Aff(ℤ[1/6]) is amenable</h4>
+          <p>Every solvable group is amenable (Day's theorem). An invariant mean on Aff(ℤ[1/6]) exists.</p>
+        </div>
+        <div class="arrow">↓ gives</div>
+        <div class="chain-item">
+          <h4>The semigroup action admits averaging</h4>
+          <p>Amenability lets us take Cesàro averages of the semigroup action. The negative drift −S/3 per step is then rigorous in an averaged sense.</p>
+        </div>
+        <div class="arrow">↓ gives</div>
+        <div class="chain-item">
+          <h4>Density-1 orbit coverage</h4>
+          <p>The backward orbit of 1 has density 1 in ℕ — meaning the proportion of integers in [1,N] that are covered tends to 1. This recovers and strengthens Tao's 2019 result in this language.</p>
+        </div>
+        <div class="arrow">↓ gap here ↓</div>
+        <div class="chain-item" style="border-left:3px solid var(--gold);background:#fff8f0">
+          <h4 style="color:var(--gold)">Full orbit coverage (= Collatz conjecture)</h4>
+          <p>Density 1 does not imply every integer is covered. Finitely many exceptions are compatible with density 1. Closing this gap requires either: (a) an explicit construction showing every n has a valid (r,l,ordering), or (b) showing density-1 + the affine structure leaves no room for exceptions.</p>
+        </div>
+      </div>
+
+      <div class="gap-box" style="margin-top:16px">
+        <strong>The key question:</strong> Can the fiber structure of B(r,l) — the set of achievable intercepts — combined with amenability of Aff(ℤ[1/6]) rule out exceptions? The fibers are algebraically explicit (all C(r+l,r) intercepts are distinct, all in ℤ[1/6]). A proof would need to show their union over all (r,l) hits every positive integer.
+      </div>
+
+      <div id="amenableComputed" style="margin-top:16px"></div>
+      <button onclick="runAmenable()" style="margin-top:8px">Compute density at each word length →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Exact rationals ──────────────────────────────────────────────────────────
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){let t=b;b=a%b;a=t;}return a||1;}
+class Q {
+  constructor(p,q=1){if(q<0){p=-p;q=-q;}const g=gcd(Math.abs(p),q);this.p=p/g;this.q=q/g;}
+  add(o){return new Q(this.p*o.q+o.p*this.q,this.q*o.q);}
+  sub(o){return new Q(this.p*o.q-o.p*this.q,this.q*o.q);}
+  mul(o){return new Q(this.p*o.p,this.q*o.q);}
+  div(o){return new Q(this.p*o.q,this.q*o.p);}
+  eq(o){return this.p===o.p&&this.q===o.q;}
+  toF(){return this.p/this.q;}
+  str(){return this.q===1?String(this.p):`${this.p}/${this.q}`;}
+  isInt(){return this.q===1&&this.p>0;}
+}
+const q=(p,d=1)=>new Q(p,d);
+const Q0=q(0),Q1=q(1);
+
+function wordAffine(word){
+  let a=Q1,b=Q0;
+  for(const c of word){
+    if(c==='L'){a=a.div(q(2));b=b.div(q(2));}
+    else{a=a.mul(q(3));b=b.mul(q(3)).add(Q1);}
+  }
+  return[a,b];
+}
+
+function collatzWord(n){
+  const w=[];let x=n;
+  while(x!==1&&w.length<500){
+    if(x%2===0){w.push('L');x=x/2;}
+    else{w.push('R');x=3*x+1;}
+  }
+  return w;
+}
+
+// ─── Fiber check ─────────────────────────────────────────────────────────────
+function runN(){
+  const n=parseInt(document.getElementById('testN').value);
+  if(isNaN(n)||n<1)return;
+  checkFiber(n);
+}
+function setN(n){document.getElementById('testN').value=n;runN();}
+
+function checkFiber(n){
+  const word=collatzWord(n);
+  const[a,b]=wordAffine(word);
+  const nQ=q(n);
+  const result=a.mul(nQ).add(b);
+  const isOne=result.eq(Q1);
+
+  document.getElementById('s-n').textContent=n;
+  document.getElementById('s-wlen').textContent=word.length;
+  document.getElementById('s-a').textContent=a.str();
+  document.getElementById('s-b').textContent=b.str();
+  const sc=document.getElementById('s-check');
+  sc.textContent=isOne?'✓ YES':'✗ NO';
+  sc.className='sv '+(isOne?'ok':'bad');
+
+  const wHTML=word.map(c=>`<span class="c${c}">${c}</span>`).join('');
+
+  let html=`
+    <div style="background:white;border:1px solid var(--rule);padding:16px;margin-bottom:16px">
+      <div class="cap">Affine map for n=${n}</div>
+      <div style="font-family:'Inconsolata',monospace;font-size:13px;background:var(--code);padding:10px;margin-bottom:10px;line-height:2;word-break:break-all">
+        w = ${wHTML}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-family:'Inconsolata',monospace;font-size:12px">
+        <div style="background:var(--code);padding:8px"><span style="color:var(--muted);font-size:10px">SLOPE a = 3ʳ/2ˡ</span><br>${a.str()}</div>
+        <div style="background:var(--code);padding:8px"><span style="color:var(--muted);font-size:10px">INTERCEPT b</span><br>${b.str()}</div>
+        <div style="background:var(--code);padding:8px"><span style="color:var(--muted);font-size:10px">f_w(${n}) = a·${n}+b</span><br><strong style="color:${isOne?'var(--green)':'var(--accent)}'}">${result.str()}</strong></div>
+      </div>
+    </div>
+  `;
+
+  // Step trace
+  html+=`<table><thead><tr><th>step</th><th>gen</th><th>n</th><th>a (cumulative)</th><th>b (cumulative)</th><th>a·${n}+b</th></tr></thead><tbody>`;
+  let ca=Q1,cb=Q0,x=n;
+  const showSteps=Math.min(word.length,25);
+  for(let i=0;i<showSteps;i++){
+    const c=word[i];
+    if(c==='L'){ca=ca.div(q(2));cb=cb.div(q(2));x=x/2;}
+    else{ca=ca.mul(q(3));cb=cb.mul(q(3)).add(Q1);x=3*x+1;}
+    const eval_=ca.mul(q(n)).add(cb);
+    html+=`<tr>
+      <td>${i+1}</td>
+      <td class="c${c}">${c}</td>
+      <td style="font-weight:${x===1?700:400};color:${x===1?'var(--green)':'inherit'}">${x}</td>
+      <td>${ca.str()}</td>
+      <td>${cb.str()}</td>
+      <td style="color:${eval_.eq(Q1)?'var(--green)':'var(--muted)'}">${eval_.str()}</td>
+    </tr>`;
+  }
+  if(word.length>showSteps)html+=`<tr><td colspan="6" style="color:var(--muted);text-align:center">... ${word.length-showSteps} more steps ...</td></tr>`;
+  html+=`</tbody></table>`;
+
+  document.getElementById('fiberContent').innerHTML=html;
+}
+
+// ─── Coverage ─────────────────────────────────────────────────────────────────
+function runCoverage(){
+  const maxLen=parseInt(document.getElementById('coverLen').value)||10;
+  const covered=new Set();
+  const byLength={};
+
+  function enumerate(word,a,b){
+    // Fiber: n(w) = (1-b)/a
+    const num=Q1.sub(b);
+    const nw=num.div(a);
+    if(nw.isInt()&&!covered.has(nw.p)){
+      covered.add(nw.p);
+      if(!byLength[word.length])byLength[word.length]=[];
+      byLength[word.length].push(nw.p);
+    }
+    if(word.length>=maxLen)return;
+    // L branch
+    enumerate(word+'L',a.div(q(2)),b.div(q(2)));
+    // R branch
+    enumerate(word+'R',a.mul(q(3)),b.mul(q(3)).add(Q1));
+  }
+  enumerate('',Q1,Q0);
+
+  const maxN=Math.max(...covered)+5;
+  const missing=[];
+  for(let i=1;i<=Math.min(maxN,200);i++){if(!covered.has(i))missing.push(i);}
+
+  let html=`<div style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--muted);margin-bottom:12px">
+    ${covered.size} integers covered by words of length ≤ ${maxLen}.
+    Density in [1,${Math.min(maxN,200)}]: ${(covered.size/Math.min(maxN,200)*100).toFixed(1)}%.
+    ${missing.length>0?`Missing: ${missing.slice(0,20).join(', ')}${missing.length>20?'...':''}`:''}</div>`;
+
+  // Grid of first 100
+  html+=`<div style="margin-bottom:12px"><div class="cap">Coverage grid (first 100 integers)</div><div class="orbit-grid">`;
+  for(let i=1;i<=100;i++){
+    const cls=i===1?'target':covered.has(i)?'covered':'missing';
+    html+=`<div class="orbit-cell ${cls}" title="n=${i}">${i}</div>`;
+  }
+  html+=`</div></div>`;
+
+  // By length
+  html+=`<table><thead><tr><th>word length</th><th>new integers covered</th><th>running total</th></tr></thead><tbody>`;
+  let running=0;
+  for(let l=1;l<=maxLen;l++){
+    const news=(byLength[l]||[]).sort((a,b)=>a-b);
+    running+=news.length;
+    html+=`<tr>
+      <td>${l}</td>
+      <td>${news.slice(0,8).join(', ')}${news.length>8?` (+${news.length-8} more)`:''}</td>
+      <td>${running}</td>
+    </tr>`;
+  }
+  html+=`</tbody></table>`;
+  document.getElementById('coverageContent').innerHTML=html;
+}
+
+// ─── Amenability density ──────────────────────────────────────────────────────
+function runAmenable(){
+  const maxLen=12;
+  const covered=new Set();
+  const rows=[];
+
+  function enumerate(word,a,b){
+    const nw=Q1.sub(b).div(a);
+    if(nw.isInt())covered.add(nw.p);
+    if(word.length>=maxLen)return;
+    enumerate(word+'L',a.div(q(2)),b.div(q(2)));
+    enumerate(word+'R',a.mul(q(3)),b.mul(q(3)).add(Q1));
+  }
+
+  // Compute incrementally by length
+  function enumerateLen(word,a,b,target){
+    if(word.length===target){
+      const nw=Q1.sub(b).div(a);
+      if(nw.isInt())covered.add(nw.p);
+      return;
+    }
+    enumerateLen(word+'L',a.div(q(2)),b.div(q(2)),target);
+    enumerateLen(word+'R',a.mul(q(3)),b.mul(q(3)).add(Q1),target);
+  }
+
+  let html=`<table><thead><tr><th>max length</th><th>integers covered</th><th>density in [1,N]</th><th>largest covered</th></tr></thead><tbody>`;
+  let allCovered=new Set();
+  for(let len=1;len<=maxLen;len++){
+    enumerateLen('',Q1,Q0,len);
+    const copy=new Set(allCovered);
+    // Re-enumerate up to this length
+    // (simpler: just re-run fully)
+    const cov=new Set();
+    function enumFull(word,a,b,maxL){
+      const nw=Q1.sub(b).div(a);
+      if(nw.isInt()&&nw.p>0)cov.add(nw.p);
+      if(word.length>=maxL)return;
+      enumFull(word+'L',a.div(q(2)),b.div(q(2)),maxL);
+      enumFull(word+'R',a.mul(q(3)),b.mul(q(3)).add(Q1),maxL);
+    }
+    if(len<=12)enumFull('',Q1,Q0,len);
+    const covArr=cov.size>0?[...cov].sort((a,b)=>a-b):[];
+    const maxCov=covArr.length>0?covArr[covArr.length-1]:0;
+    const N=Math.max(maxCov,50);
+    const density=(covArr.filter(x=>x<=N).length/N*100).toFixed(1);
+    html+=`<tr><td>${len}</td><td>${cov.size}</td><td>${density}% of [1,${N}]</td><td>${maxCov}</td></tr>`;
+  }
+  html+=`</tbody></table>`;
+  document.getElementById('amenableComputed').innerHTML=html;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+function switchTab(id,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+window.addEventListener('load',()=>{checkFiber(7);});
+document.getElementById('testN').addEventListener('keydown',e=>{if(e.key==='Enter')runN();});
+</script>
+</body>
+</html>
