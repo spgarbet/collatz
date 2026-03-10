@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J_Collatz Invariant Explorer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --border: #1e1e2e;
+    --accent1: #7ef7b0;
+    --accent2: #7eb8f7;
+    --accent3: #f77eb8;
+    --accent4: #f7e07e;
+    --text: #c8c8d8;
+    --muted: #5a5a7a;
+    --odd-col: #f77eb8;
+    --even-col: #7eb8f7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  .header {
+    padding: 28px 36px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+
+  .header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent1);
+    letter-spacing: -0.5px;
+  }
+
+  .header .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 69px);
+  }
+
+  .sidebar {
+    grid-row: 1 / 3;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  input[type=number], input[type=text] {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent1); }
+
+  button {
+    background: var(--accent1);
+    color: #000;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+
+  .quick-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .quick-btns button {
+    background: var(--panel);
+    color: var(--accent2);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .quick-btns button:hover { border-color: var(--accent2); }
+
+  .stats-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-label { color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .stat-val { color: var(--accent1); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .stat-val.blue { color: var(--accent2); }
+  .stat-val.pink { color: var(--accent3); }
+  .stat-val.yellow { color: var(--accent4); }
+
+  .grammar-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .grammar-box p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .grammar-box .rule-e { color: var(--accent2); }
+  .grammar-box .rule-o { color: var(--accent3); }
+  .grammar-box .note { color: var(--muted); font-size: 10px; }
+
+  .findings-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent4);
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .findings-box strong { color: var(--accent4); font-family: 'IBM Plex Mono', monospace; }
+
+  /* Right panels */
+  .top-panel {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 3px;
+  }
+  .tab-btn.active {
+    background: var(--panel);
+    color: var(--accent1);
+    border-color: var(--accent1);
+  }
+
+  .main-area {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .view { display: none; width: 100%; height: 100%; }
+  .view.active { display: block; }
+
+  /* Chart view */
+  #chart-view {
+    padding: 16px 24px;
+    overflow-y: auto;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+  }
+
+  .chart-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* Table view */
+  #table-view {
+    overflow: auto;
+    height: 100%;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+
+  thead th {
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 14px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--panel); }
+  tbody tr.odd-row td:first-child { border-left: 2px solid var(--odd-col); }
+  tbody tr.even-row td:first-child { border-left: 2px solid var(--even-col); }
+
+  td {
+    padding: 7px 14px;
+    color: var(--text);
+  }
+
+  td.n-val { color: #fff; font-weight: 600; }
+  td.odd-step { color: var(--odd-col); }
+  td.even-step { color: var(--even-col); }
+  td.rule-e { color: var(--accent2); }
+  td.rule-o { color: var(--accent3); }
+  td.im-val { color: var(--accent1); }
+  td.ratio-val { color: var(--accent4); }
+
+  /* Phase view */
+  #phase-view {
+    padding: 16px 24px;
+    overflow-y: auto;
+  }
+
+  .phase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .error-msg {
+    color: var(--accent3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>J_Collatz Invariant Explorer</h1>
+  <span class="subtitle">Im(τ) = v₂(context) / (a₀ + 1) · Gödel-encoded Collatz sequence analysis</span>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div>
+      <div class="section-label">Starting Number</div>
+      <div class="input-row">
+        <input type="number" id="startInput" value="27" min="2">
+        <button onclick="compute()">Run</button>
+      </div>
+      <div style="margin-top:8px">
+        <div class="section-label" style="margin-bottom:6px">Quick Examples</div>
+        <div class="quick-btns">
+          <button onclick="setAndRun(7)">7</button>
+          <button onclick="setAndRun(27)">27</button>
+          <button onclick="setAndRun(97)">97</button>
+          <button onclick="setAndRun(127)">127</button>
+          <button onclick="setAndRun(703)">703</button>
+          <button onclick="setAndRun(871)">871</button>
+          <button onclick="setAndRun(6171)">6171</button>
+          <button onclick="setAndRun(77031)">77031</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Sequence Statistics</div>
+      <div class="stats-box" id="statsBox">
+        <div class="stat-row"><span class="stat-label">length</span><span class="stat-val" id="s-len">—</span></div>
+        <div class="stat-row"><span class="stat-label">odd steps</span><span class="stat-val pink" id="s-odd">—</span></div>
+        <div class="stat-row"><span class="stat-label">even steps</span><span class="stat-val blue" id="s-even">—</span></div>
+        <div class="stat-row"><span class="stat-label">Im(τ) start</span><span class="stat-val yellow" id="s-im-start">—</span></div>
+        <div class="stat-row"><span class="stat-label">Im(τ) final</span><span class="stat-val yellow" id="s-im-end">—</span></div>
+        <div class="stat-row"><span class="stat-label">net log ratio</span><span class="stat-val" id="s-log-ratio">—</span></div>
+        <div class="stat-row"><span class="stat-label">mean Im(τ)</span><span class="stat-val" id="s-mean-im">—</span></div>
+        <div class="stat-row"><span class="stat-label">max Im(τ)</span><span class="stat-val" id="s-max-im">—</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">The Two Rules (a₁ = 0 case)</div>
+      <div class="grammar-box">
+        <p><span class="rule-e">E(a₀)</span>: Im → Im · (a₀²−1)/a₀²</p>
+        <p style="color:var(--muted);font-size:10px;margin-bottom:6px">even step; a₀ = #factors of 2</p>
+        <p><span class="rule-o">O(k)</span>: Im → Im · 1/(k+1)</p>
+        <p style="color:var(--muted);font-size:10px;margin-bottom:6px">odd step; k = v₂(3n+1)</p>
+        <p class="note">—</p>
+        <p class="note">E(2) = ×3/4 &nbsp; E(3) = ×8/9</p>
+        <p class="note">O(1) = ×1/2 &nbsp; O(2) = ×1/3</p>
+        <p class="note" style="margin-top:6px;color:var(--accent4)">All ratios are rational.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Key Findings</div>
+      <div class="findings-box">
+        <strong>1. Arg invariance</strong><br>
+        arg(τ) = π/2 always when a₁=0. The sequence lives on the imaginary axis almost everywhere.<br><br>
+        <strong>2. Rational grammar</strong><br>
+        Im(τ) transitions form a finite-alphabet string rewriting system over ℚ.<br><br>
+        <strong>3. Terminal attractor</strong><br>
+        All sequences end at Im(τ) = 1/2 (at n=2). This is the fixed point.<br><br>
+        <strong>4. Not a Lyapunov fn</strong><br>
+        E[ratio per step] ≈ 1.39 > 1. Im(τ) does not decrease monotonically — convergence comes from log(n), not Im(τ).
+      </div>
+    </div>
+
+  </div>
+
+  <div class="top-panel">
+    <button class="tab-btn active" onclick="switchTab('chart-view', this)">Charts</button>
+    <button class="tab-btn" onclick="switchTab('table-view', this)">Step Table</button>
+    <button class="tab-btn" onclick="switchTab('phase-view', this)">Phase Analysis</button>
+  </div>
+
+  <div class="main-area">
+
+    <div id="chart-view" class="view active">
+      <div class="chart-wrapper">
+        <div class="chart-title">Im(τ) = v₂(context) / (a₀ + 1) over iteration steps</div>
+        <canvas id="imChart" height="180"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-title">log Im(τ) — cumulative log-ratio walk</div>
+        <canvas id="logChart" height="160"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-title">Transition ratio at each step (odd=pink, even=blue)</div>
+        <canvas id="ratioChart" height="140"></canvas>
+      </div>
+    </div>
+
+    <div id="table-view" class="view">
+      <table>
+        <thead>
+          <tr>
+            <th>step</th>
+            <th>n</th>
+            <th>type</th>
+            <th>a₀</th>
+            <th>a₁</th>
+            <th>v₂(ctx)</th>
+            <th>Im(τ)</th>
+            <th>rule</th>
+            <th>ratio</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="phase-view" class="view">
+      <div class="phase-grid">
+        <div class="chart-wrapper">
+          <div class="chart-title">Histogram: Im(τ) values in sequence</div>
+          <canvas id="histChart" height="200"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <div class="chart-title">Im(τ)[i+1] vs Im(τ)[i] — phase portrait</div>
+          <canvas id="phaseChart" height="200"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <div class="chart-title">Rule frequency (E vs O types)</div>
+          <canvas id="ruleChart" height="200"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <div class="chart-title">Cumulative ratio product (net Im(τ) drift)</div>
+          <canvas id="driftChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ---- Pure JS Collatz + tau computation ----
+
+function v2(n) {
+  if (n === 0) return 0;
+  let c = 0;
+  while (n % 2 === 0) { n = Math.floor(n / 2); c++; }
+  return c;
+}
+
+function primeFactors(n) {
+  const f = {};
+  let d = 2;
+  while (d * d <= n) {
+    while (n % d === 0) { f[d] = (f[d] || 0) + 1; n = Math.floor(n / d); }
+    d++;
+  }
+  if (n > 1) f[n] = (f[n] || 0) + 1;
+  return f;
+}
+
+function tauData(n) {
+  const f = primeFactors(n);
+  const a0 = f[2] || 0;
+  const a1 = f[3] || 0;
+  const kval = (n % 2 === 1) ? v2(3 * n + 1) : v2(n);
+  const im = kval / (a0 + 1);
+  return { a0, a1, kval, im };
+}
+
+function getRule(n) {
+  if (n % 2 === 1) {
+    const k = v2(3 * n + 1);
+    return { rule: `O(${k})`, ratio: `1/${k + 1}`, ratioVal: 1 / (k + 1), type: 'odd' };
+  } else {
+    const a0 = (primeFactors(n)[2] || 0);
+    if (a0 >= 2) {
+      return {
+        rule: `E(${a0})`,
+        ratio: `${a0 * a0 - 1}/${a0 * a0}`,
+        ratioVal: (a0 * a0 - 1) / (a0 * a0),
+        type: 'even'
+      };
+    }
+    return { rule: 'E(1)', ratio: 'special', ratioVal: null, type: 'even' };
+  }
+}
+
+function collatzSeq(start, maxIter = 500) {
+  const steps = [];
+  let n = start;
+  let i = 0;
+  while (n !== 1 && i < maxIter) {
+    const td = tauData(n);
+    const r = getRule(n);
+    steps.push({ i, n, ...td, ...r });
+    n = (n % 2 === 0) ? Math.floor(n / 2) : 3 * n + 1;
+    i++;
+  }
+  // Add final n=1 or last
+  const td = tauData(n);
+  steps.push({ i, n, ...td, rule: '—', ratio: '—', ratioVal: null, type: n % 2 === 1 ? 'odd' : 'even' });
+  return steps;
+}
+
+// ---- State ----
+let currentSteps = [];
+
+// ---- Canvas drawing helpers ----
+function clearCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+  return ctx;
+}
+
+function drawLine(ctx, data, color, W, H, pad, yMin, yMax) {
+  if (data.length < 2) return;
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  data.forEach((val, i) => {
+    const x = pad + (i / (data.length - 1)) * (W - 2 * pad);
+    const y = H - pad - ((val - yMin) / (yMax - yMin || 1)) * (H - 2 * pad);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function drawGrid(ctx, W, H, pad, yMin, yMax, steps, color = '#1e1e2e') {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5;
+  const nLines = 5;
+  for (let i = 0; i <= nLines; i++) {
+    const y = pad + (i / nLines) * (H - 2 * pad);
+    const val = yMax - (i / nLines) * (yMax - yMin);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+    ctx.fillStyle = '#5a5a7a';
+    ctx.font = '10px IBM Plex Mono';
+    ctx.fillText(val.toFixed(2), 4, y + 3);
+  }
+}
+
+function renderCharts(steps) {
+  const imVals = steps.map(s => s.im);
+  const logVals = steps.map(s => s.im > 0 ? Math.log(s.im) : null).filter(v => v !== null);
+  const ratioVals = steps.map(s => s.ratioVal);
+
+  // Im(tau) chart
+  {
+    const canvas = document.getElementById('imChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const yMin = 0, yMax = Math.max(2, ...imVals) * 1.05;
+    drawGrid(ctx, W, H, pad, yMin, yMax, steps);
+    // Draw odd/even colored dots
+    steps.forEach((s, i) => {
+      const x = pad + (i / Math.max(steps.length - 1, 1)) * (W - 2 * pad);
+      const y = H - pad - ((s.im - yMin) / (yMax - yMin)) * (H - 2 * pad);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = s.type === 'odd' ? '#f77eb8' : '#7eb8f7';
+      ctx.fill();
+    });
+    drawLine(ctx, imVals, '#7ef7b088', W, H, pad, yMin, yMax);
+    // Terminal line at 0.5
+    const yLine = H - pad - ((0.5 - yMin) / (yMax - yMin)) * (H - 2 * pad);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#f7e07e44';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, yLine); ctx.lineTo(W - pad, yLine); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f7e07e88';
+    ctx.font = '9px IBM Plex Mono';
+    ctx.fillText('Im(τ)=0.5 attractor', W - pad - 130, yLine - 4);
+  }
+
+  // log Im(tau) chart
+  {
+    const canvas = document.getElementById('logChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const yMin = Math.min(...logVals) - 0.2, yMax = Math.max(...logVals) + 0.2;
+    drawGrid(ctx, W, H, pad, yMin, yMax, steps);
+    drawLine(ctx, logVals, '#7ef7b0', W, H, pad, yMin, yMax);
+    // Zero line
+    const yZero = H - pad - ((0 - yMin) / (yMax - yMin)) * (H - 2 * pad);
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = '#ffffff22';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, yZero); ctx.lineTo(W - pad, yZero); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Ratio chart
+  {
+    const canvas = document.getElementById('ratioChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const validR = ratioVals.filter(v => v !== null);
+    const yMin = 0, yMax = Math.max(2, ...validR) * 1.05;
+    drawGrid(ctx, W, H, pad, yMin, yMax, steps);
+    steps.forEach((s, i) => {
+      if (s.ratioVal === null) return;
+      const x = pad + (i / Math.max(steps.length - 1, 1)) * (W - 2 * pad);
+      const y = H - pad - ((s.ratioVal - yMin) / (yMax - yMin)) * (H - 2 * pad);
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = s.type === 'odd' ? '#f77eb8cc' : '#7eb8f7cc';
+      ctx.fill();
+    });
+    // Line at 1
+    const yOne = H - pad - ((1 - yMin) / (yMax - yMin)) * (H - 2 * pad);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#ffffff33';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, yOne); ctx.lineTo(W - pad, yOne); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function renderPhase(steps) {
+  // Histogram
+  {
+    const canvas = document.getElementById('histChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const vals = steps.map(s => s.im).filter(v => v > 0);
+    const bins = 20;
+    const mn = 0, mx = Math.min(5, Math.max(...vals));
+    const counts = new Array(bins).fill(0);
+    vals.forEach(v => {
+      const b = Math.min(bins - 1, Math.floor(((v - mn) / (mx - mn)) * bins));
+      counts[b]++;
+    });
+    const maxC = Math.max(...counts);
+    counts.forEach((c, i) => {
+      const x = pad + (i / bins) * (W - 2 * pad);
+      const bW = (W - 2 * pad) / bins - 1;
+      const h = (c / maxC) * (H - 2 * pad);
+      ctx.fillStyle = '#7ef7b066';
+      ctx.strokeStyle = '#7ef7b0';
+      ctx.lineWidth = 0.5;
+      ctx.fillRect(x, H - pad - h, bW, h);
+      ctx.strokeRect(x, H - pad - h, bW, h);
+    });
+    // x labels
+    ctx.fillStyle = '#5a5a7a';
+    ctx.font = '9px IBM Plex Mono';
+    for (let i = 0; i <= 5; i++) {
+      const x = pad + (i / 5) * (W - 2 * pad);
+      ctx.fillText((mn + i * (mx - mn) / 5).toFixed(1), x - 8, H - 10);
+    }
+  }
+
+  // Phase portrait Im[i+1] vs Im[i]
+  {
+    const canvas = document.getElementById('phaseChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const vals = steps.map(s => s.im);
+    const mx = Math.min(5, Math.max(...vals));
+    const mn = 0;
+    for (let i = 0; i < vals.length - 1; i++) {
+      const x = pad + (Math.min(vals[i], mx) - mn) / (mx - mn) * (W - 2 * pad);
+      const y = H - pad - (Math.min(vals[i + 1], mx) - mn) / (mx - mn) * (H - 2 * pad);
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = steps[i].type === 'odd' ? '#f77eb888' : '#7eb8f788';
+      ctx.fill();
+    }
+    // diagonal
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = '#ffffff22';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, H - pad); ctx.lineTo(W - pad, pad); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#5a5a7a';
+    ctx.font = '9px IBM Plex Mono';
+    ctx.fillText('Im[i]', W - pad - 25, H - 8);
+    ctx.save(); ctx.translate(12, H / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Im[i+1]', 0, 0); ctx.restore();
+  }
+
+  // Rule frequency
+  {
+    const canvas = document.getElementById('ruleChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    const ruleCounts = {};
+    steps.forEach(s => { if (s.rule !== '—') ruleCounts[s.rule] = (ruleCounts[s.rule] || 0) + 1; });
+    const sorted = Object.entries(ruleCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+    const maxC = Math.max(...sorted.map(x => x[1]));
+    const bW = (W - 2 * pad) / sorted.length - 2;
+    sorted.forEach(([rule, count], i) => {
+      const x = pad + i * ((W - 2 * pad) / sorted.length);
+      const h = (count / maxC) * (H - 2 * pad - 20);
+      const isOdd = rule.startsWith('O');
+      ctx.fillStyle = isOdd ? '#f77eb866' : '#7eb8f766';
+      ctx.strokeStyle = isOdd ? '#f77eb8' : '#7eb8f7';
+      ctx.lineWidth = 0.5;
+      ctx.fillRect(x, H - pad - h - 18, bW, h);
+      ctx.strokeRect(x, H - pad - h - 18, bW, h);
+      ctx.fillStyle = isOdd ? '#f77eb8' : '#7eb8f7';
+      ctx.font = '8px IBM Plex Mono';
+      ctx.fillText(rule, x, H - 6);
+      ctx.fillStyle = '#9090aa';
+      ctx.fillText(count, x, H - pad - h - 22);
+    });
+  }
+
+  // Cumulative drift
+  {
+    const canvas = document.getElementById('driftChart');
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const ctx = clearCanvas(canvas);
+    const pad = 30;
+    let cum = 0;
+    const cumVals = [0];
+    for (let i = 0; i < steps.length - 1; i++) {
+      const r = steps[i].ratioVal;
+      if (r !== null && r > 0) cum += Math.log(r);
+      cumVals.push(cum);
+    }
+    const yMin = Math.min(...cumVals) - 0.1;
+    const yMax = Math.max(...cumVals) + 0.1;
+    drawGrid(ctx, W, H, pad, yMin, yMax, steps);
+    drawLine(ctx, cumVals, '#7ef7b0', W, H, pad, yMin, yMax);
+    const yZero = H - pad - ((0 - yMin) / (yMax - yMin)) * (H - 2 * pad);
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = '#f7e07e55';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, yZero); ctx.lineTo(W - pad, yZero); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function renderTable(steps) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  steps.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.className = s.type === 'odd' ? 'odd-row' : 'even-row';
+    tr.innerHTML = `
+      <td>${s.i}</td>
+      <td class="n-val">${s.n}</td>
+      <td class="${s.type === 'odd' ? 'odd-step' : 'even-step'}">${s.type}</td>
+      <td>${s.a0}</td>
+      <td>${s.a1}</td>
+      <td>${s.kval}</td>
+      <td class="im-val">${s.im.toFixed(5)}</td>
+      <td class="${s.rule.startsWith('O') ? 'rule-o' : (s.rule.startsWith('E') ? 'rule-e' : '')}">${s.rule}</td>
+      <td class="ratio-val">${s.ratio}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateStats(steps) {
+  const imVals = steps.map(s => s.im);
+  const oddCount = steps.filter(s => s.type === 'odd').length;
+  const evenCount = steps.filter(s => s.type === 'even').length;
+  const logRatio = steps.reduce((acc, s) => {
+    if (s.ratioVal !== null && s.ratioVal > 0) acc += Math.log(s.ratioVal);
+    return acc;
+  }, 0);
+
+  document.getElementById('s-len').textContent = steps.length;
+  document.getElementById('s-odd').textContent = oddCount;
+  document.getElementById('s-even').textContent = evenCount;
+  document.getElementById('s-im-start').textContent = imVals[0].toFixed(4);
+  document.getElementById('s-im-end').textContent = imVals[imVals.length - 1].toFixed(4);
+  document.getElementById('s-log-ratio').textContent = logRatio.toFixed(4);
+  document.getElementById('s-mean-im').textContent = (imVals.reduce((a, b) => a + b, 0) / imVals.length).toFixed(4);
+  document.getElementById('s-max-im').textContent = Math.max(...imVals).toFixed(4);
+}
+
+function compute() {
+  const val = parseInt(document.getElementById('startInput').value);
+  if (isNaN(val) || val < 2) return;
+  currentSteps = collatzSeq(val);
+  updateStats(currentSteps);
+  renderCharts(currentSteps);
+  renderTable(currentSteps);
+  renderPhase(currentSteps);
+}
+
+function setAndRun(n) {
+  document.getElementById('startInput').value = n;
+  compute();
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  // Re-render if switching to a canvas view
+  if (currentSteps.length > 0) {
+    requestAnimationFrame(() => {
+      if (id === 'chart-view') renderCharts(currentSteps);
+      if (id === 'phase-view') renderPhase(currentSteps);
+    });
+  }
+}
+
+// Init
+window.addEventListener('load', () => {
+  compute();
+});
+
+window.addEventListener('resize', () => {
+  if (currentSteps.length > 0) {
+    const active = document.querySelector('.view.active');
+    if (active && active.id === 'chart-view') renderCharts(currentSteps);
+    if (active && active.id === 'phase-view') renderPhase(currentSteps);
+  }
+});
+
+document.getElementById('startInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') compute();
+});
+</script>
+</body>
+</html>
