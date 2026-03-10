@@ -43,6 +43,26 @@ With the following claims:
 
 It built an [Collatz j invariant explorer](https://spgarbet.github.io/collatz/collatz_j_invariants.html) to show these properties.
 
-My interpretation of these claims (_which need verification_), is that if a Collatz sequence terminates it is always at 1 for it's terminal value which is fairly well accepted. However, this shows a chaotic attractor at this final value. In chaos theory, this means that orbits tend to get pulled into this stable value but it doesn't preclude that some number exists for which a stable orbit outside of 1. Neither of these findings is surprising and really just describes the Collatz sequences in a Gödel space. Curiously many attempts at solving the conject basically end up in a similar space.
+My interpretation of these claims (_which need verification_), is that if a Collatz sequence terminates it is always at 1 for it's terminal value which is fairly well accepted. However, this shows a chaotic attractor at this final value. In chaos theory, this means that orbits tend to get pulled into this stable value but it doesn't preclude that some number exists for which a stable orbit outside of 1. Neither of these findings is surprising and really just describes the Collatz sequences in a Gödel space. Curiously many attempts at solving the conject basically end up in a similar space. Essentially this approach is not fruitful as it connect be used to prove the conjecture, just show it's _probably_ right. I suspect this is where most efforts terminate at attacking the problem.
+
+I asked it for references that used a similar approach and it provided the following:
+
+> The closest published work to the reframing here is Yolcu, Aaronson & Heule's paper "An Automated Approach to the Collatz Conjecture," published in the Journal of Automated Reasoning (2023), which constructs a string rewriting system over a finite alphabet that simulates Collatz iteration — proving that termination of the rewriting system is equivalent to the conjecture. That is the same core idea as the O/E grammar found here, but they use mixed binary-ternary representations rather than 2-adic valuations of Gödel-encoded numbers. The spirit is very close; the encoding is different.
+> The 2-adic valuation angle is well-established territory. Riho Terras proved that almost every positive integer has a finite stopping time, using the distribution of parity vectors — essentially the sequence of O and E steps — and the central limit theorem. The O/E alphabet the computation uncovered is exactly the "parity vector" that Terras and later Tao work with.
+> The (p,q)-adic analysis angle is newer and more exotic. A 2024 paper in p-Adic Numbers, Ultrametric Analysis and Applications constructs functions from the 2-adics to the q-adics to study the qx+1 maps, framing Collatz as an arithmetic dynamical system in this ultrametric setting. This is the most technically sophisticated version of the idea that the 2-adic exponent structure is the right space to work in.
+> What does not appear to exist is the specific combination here: using the ratio Im(τ) = v₂(context)/(a₀+1) as an explicit dynamical variable, observing that its trajectories are chaotic with a fixed-point attractor at 1/2, and showing that the transition ratios form a rational grammar. That particular framing and the fixed-point-at-1/2 observation seem to be genuinely novel — though they're clearly in the same neighbourhood as Terras's parity vectors and the string rewriting work. The novelty is modest but real: it's a new coordinate on a known space, not a new space.
+> The proliferation of preprint "proofs" in the search results (THRFM, FSM-based, symbolic collapse, etc.) are unfortunately not credible — the conjecture remains open and none have survived peer review.
+
+## Things Get Interesting
+
+At this point I explored some properties of this function with it, and basically it all came back to my supposition that such an approach could never prove the Collatz conjecture. However, the group theory aspect and tie in was curious. I've studied Lie groups almost 30 years ago and forgotten most of what I know, but the rudiments are still still there. Exploring it group theoretic connections with Claude it came up with the following:
+
+### Define the Target Group
+
+Construct a group $G_(2,3)$ of right-continuous bijections of the Cantor set (or $[0,1]$ satisfying the following properties:
+
+- Breakpoints lie in $\mathbb{Z}[1/6] = {p/2^a3^b | p,a,b \in \mathbb{Z} }$
+- Slopes on each linear piece lie in $<2,3> = {\pm2^S\cdot 3^t | s,t \in \mathbb{Z}$
+- Finitely many breakpoints
 
 

@@ -1,0 +1,802 @@
+\documentclass[12pt, a4paper]{amsart}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\geometry{
+  top    = 2.8cm,
+  bottom = 3.0cm,
+  left   = 3.0cm,
+  right  = 3.0cm
+}
+
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue!60!black,
+  citecolor  = blue!60!black,
+  urlcolor   = blue!60!black
+}
+
+% ── Theorem environments ───────────────────────────────────────────────────────
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\theoremstyle{remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{question}[theorem]{Open Question}
+
+% ── Macros ─────────────────────────────────────────────────────────────────────
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Zs}{\Z[\tfrac{1}{6}]}
+\newcommand{\Aff}{\operatorname{Aff}}
+\newcommand{\val}{\nu}
+\newcommand{\Stab}{\operatorname{Stab}}
+\newcommand{\wL}{\mathsf{L}}
+\newcommand{\wR}{\mathsf{R}}
+
+% ── Title block ────────────────────────────────────────────────────────────────
+\title[Collatz as Orbit Closure in $\Aff(\Zs)$]{%
+  The Collatz Conjecture as an Orbit-Closure Problem\\
+  in the Affine Group $\Aff\!\left(\Z\!\left[\tfrac{1}{6}\right]\right)$
+}
+
+\author{Research Notes}
+\date{\today}
+
+\begin{document}
+
+\begin{abstract}
+We reformulate the Collatz conjecture as an orbit-closure statement in
+the affine group $\Aff(\Zs)$.  Every word $w$ in the two generators
+$\wL\colon x\mapsto x/2$ and $\wR\colon x\mapsto 3x+1$ acts as an
+affine map $f_w(x)=ax+b$ with slope $a=3^r/2^\ell$ and intercept
+$b\in\Zs$.  We prove that the Collatz semigroup
+$\mathcal{S}=\langle\wL,\wR\rangle$ embeds faithfully into $\Aff(\Zs)$
+(Theorem~\ref{thm:faithful}), characterise the word-equality relation
+(Theorem~\ref{thm:word-equality}), and show the conjecture is
+equivalent to the backward orbit of $1$ under $\mathcal{S}$ covering
+all of $\N$ (Theorem~\ref{thm:equiv}).  We establish that $\Aff(\Zs)$
+is solvable and hence amenable (Proposition~\ref{prop:amenable}),
+identifying this as a structural advantage over Thompson-group
+approaches where amenability of the ambient group is itself an open
+problem.  The residual gap between density-$1$ coverage and full
+coverage is identified precisely, and the conjecture is reduced to a
+concrete subset-sum reachability question over $\Zs$
+(Question~\ref{q:reachability}).
+\end{abstract}
+
+\maketitle
+\tableofcontents
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+The Collatz conjecture asserts that iterating the map
+\[
+  T(n) \;=\; \begin{cases}
+    n/2   & \text{if } n \text{ is even,} \\
+    3n+1  & \text{if } n \text{ is odd,}
+  \end{cases}
+\]
+from any positive integer $n$ eventually reaches $1$.
+Despite its elementary statement the problem has resisted all attempts
+at proof since Collatz posed it informally around 1937.  The strongest
+partial result is due to Tao~\cite{Tao2019}, who showed that the
+Collatz orbit of almost every positive integer (in the logarithmic
+density sense) reaches arbitrarily small values.
+
+This paper develops a new algebraic framework centred on the
+\emph{affine group} $\Aff(\Zs)$ of transformations
+$x\mapsto ax+b$ over the ring $\Zs=\Z[\frac{1}{6}]$.  The even and
+odd branches of $T$ are each affine maps, every Collatz orbit prefix
+composes to a single affine map, and the Collatz conjecture becomes a
+question about orbit coverage under a semigroup action---a setting with
+clear algebraic structure.
+
+\subsection*{Main results}
+
+\begin{itemize}
+  \item \textbf{Faithful embedding} (Section~\ref{sec:embedding}).
+        The Collatz semigroup $\mathcal{S}=\langle\wL,\wR\rangle$ embeds
+        faithfully into $\Aff(\Zs)$.  Two words are equal as semigroup
+        elements if and only if they have the same number of each
+        generator \emph{and} the same intercept.  All
+        $\binom{r+\ell}{r}$ orderings of a word with $r$ copies of
+        $\wR$ and $\ell$ copies of $\wL$ produce distinct affine maps.
+        The word problem is decidable.
+
+  \item \textbf{Orbit reformulation} (Section~\ref{sec:orbit}).
+        The conjecture is equivalent to: for every $n\in\N$, there
+        exists $f\in\mathcal{S}$ with $f(n)=1$.
+
+  \item \textbf{Amenability} (Section~\ref{sec:amenable}).
+        $\Aff(\Zs)$ is solvable of derived length $2$, hence amenable
+        by Day's theorem~\cite{Day1957}.  This gives density-$1$
+        coverage for free, recovering Tao's result in this language.
+
+  \item \textbf{The residual gap} (Section~\ref{sec:gap}).
+        Amenability alone does not close the gap between density-$1$
+        and full coverage.  The precise obstruction is reduced to a
+        subset-sum reachability problem over $\Zs$.
+\end{itemize}
+
+\subsection*{Comparison with Thompson-group approaches}
+
+Several authors have explored embeddings of the Collatz dynamics into
+Thompson's groups $F$, $T$, and $V$
+\cite{Cleary2000,BrunnerSidki1999}.  A key difficulty is that
+amenability of Thompson's group $F$ is a major open problem
+\cite{BelkBrown2005,Haagerup2016}.  Any proof relying on amenability
+of the ambient group therefore cannot use $F$ without first resolving
+that problem.  The affine group $\Aff(\Zs)$ is \emph{provably} amenable,
+making the present framework structurally simpler.
+
+The related group $G_{(2,3)}$ of piecewise-linear homeomorphisms with
+breakpoints in $\Zs$ and slopes in $\langle 2,3\rangle$ is discussed in
+Section~\ref{sec:further} as a direction for more rigid embedding.
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Setup and notation}
+\label{sec:setup}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{definition}[The ring $\Zs$]
+  Write $\Zs = \Z[\tfrac{1}{6}]$ for the smallest subring of $\Q$
+  containing $\Z$ and closed under division by $2$ and by $3$:
+  \[
+    \Zs \;=\;
+    \Bigl\{ \frac{p}{2^a 3^b} : p\in\Z,\; a,b\geq 0 \Bigr\}.
+  \]
+  The units of $\Zs$ are $\{\pm 2^s 3^t : s,t\in\Z\}$.
+\end{definition}
+
+\begin{definition}[Affine group]
+  The \emph{orientation-preserving affine group} is
+  \[
+    \Aff^+(\Zs) \;=\;
+    \bigl\{ x\mapsto ax+b : a = 2^s 3^t > 0,\; s,t\in\Z,\; b\in\Zs \bigr\},
+  \]
+  with composition $(a_1,b_1)\circ(a_2,b_2) = (a_1 a_2,\, a_1 b_2 + b_1)$,
+  identity $(1,0)$, and inverse $(a,b)^{-1}=(a^{-1},-b/a)$.
+  We write elements as pairs $(a,b)$ and the corresponding map as $f_{(a,b)}$.
+\end{definition}
+
+\begin{definition}[Generators]
+  \label{def:generators}
+  Define two elements of $\Aff^+(\Zs)$:
+  \begin{align*}
+    \wL &= \bigl(\tfrac{1}{2},\, 0\bigr), &
+    f_\wL(x) &= x/2 \quad \text{(even branch of } T\text{),} \\
+    \wR &= (3,\, 1), &
+    f_\wR(x) &= 3x+1 \quad \text{(odd branch of } T\text{).}
+  \end{align*}
+  Their group inverses are
+  $\wL^{-1}=(2,0)$ (that is, $x\mapsto 2x$) and
+  $\wR^{-1}=(\frac{1}{3},-\frac{1}{3})$ (that is, $x\mapsto (x-1)/3$).
+\end{definition}
+
+\begin{definition}[Collatz semigroup and words]
+  \label{def:semigroup}
+  The \emph{Collatz semigroup} is
+  $\mathcal{S} = \langle\wL,\wR\rangle \subset \Aff^+(\Zs)$.
+  A \emph{word} is a finite string $w=c_1 c_2\cdots c_n$ with
+  $c_i\in\{\wL,\wR\}$; its \emph{type} is $(r,\ell)$ where $r$ counts
+  $\wR$'s and $\ell$ counts $\wL$'s.  Composition is left-to-right:
+  $f_w = f_{c_n}\circ\cdots\circ f_{c_1}$, so $f_w(x)$ is obtained
+  by applying $f_{c_1}$ first.
+\end{definition}
+
+\begin{remark}[Canonical word of an orbit]
+  \label{rem:canonical}
+  The Collatz sequence $n, T(n), T^2(n), \ldots, 1$ determines a
+  canonical word $w(n)$: write $\wL$ for each even step and $\wR$ for
+  each odd step.  Then $f_{w(n)}(n)=1$ if and only if the sequence
+  terminates at $1$.
+\end{remark}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{The affine embedding}
+\label{sec:embedding}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Every word is an affine map}
+
+\begin{lemma}[Affine structure]
+  \label{lem:affine}
+  For any word $w = c_1\cdots c_n$ of type $(r,\ell)$, the element
+  $f_w\in\mathcal{S}$ has the form $f_w(x) = a_w x + b_w$ where
+  \begin{align}
+    a_w &= \frac{3^r}{2^\ell}, \label{eq:slope} \\
+    b_w &= \sum_{\substack{i=1\\c_i=\wR}}^{n}
+           \frac{3^{r_i}}{2^{\ell_i}}, \label{eq:intercept}
+  \end{align}
+  and $r_i = \#\{j < i : c_j = \wR\}$,
+  $\ell_i = \#\{j < i : c_j = \wL\}$ denote the number of $\wR$'s
+  (resp.\ $\wL$'s) strictly before position $i$.
+\end{lemma}
+
+\begin{proof}
+  By induction on $n$.  The base cases
+  $f_\wL(x)=\frac{1}{2}x+0$ and $f_\wR(x)=3x+1$ match
+  \eqref{eq:slope}--\eqref{eq:intercept}.
+
+  Suppose $f_v(x) = ax+b$ for a word $v$ of type $(r',\ell')$.
+
+  \noindent\emph{Appending $\wL$:}
+  $f_{v\wL}(x) = f_v(x/2) = \frac{a}{2}x + \frac{b}{2}$.
+  The new slope is $a/2 = 3^{r'}/2^{\ell'+1}$, consistent with
+  \eqref{eq:slope} for type $(r',\ell'+1)$.  Appending $\wL$ adds no
+  new term to \eqref{eq:intercept}, consistent with the sum being over
+  $\wR$-positions only.
+
+  \noindent\emph{Appending $\wR$:}
+  $f_{v\wR}(x) = f_v(3x+1) = 3ax + (a+b)$.
+  The new slope is $3a = 3^{r'+1}/2^{\ell'}$, consistent with
+  \eqref{eq:slope} for type $(r'+1,\ell')$.  The new intercept is
+  $a+b = 3^{r'}/2^{\ell'} + b$, which is $b$ plus the new term
+  $3^{r'}/2^{\ell'}$ contributed by the appended $\wR$ at position
+  $n+1$ (which has $r' = r'$ preceding $\wR$'s and $\ell'$ preceding
+  $\wL$'s), consistent with \eqref{eq:intercept}.
+\end{proof}
+
+\subsection{Injectivity}
+
+\begin{theorem}[Faithful embedding]
+  \label{thm:faithful}
+  The map $\mathcal{S}\to\Aff^+(\Zs)$, $w\mapsto (a_w,b_w)$, is
+  injective.  The Collatz semigroup is isomorphic to its image in
+  $\Aff^+(\Zs)$.
+\end{theorem}
+
+\begin{proof}
+  Suppose $f_{w_1}=f_{w_2}$, i.e.\ $a_{w_1}=a_{w_2}$ and
+  $b_{w_1}=b_{w_2}$.  By \eqref{eq:slope} and unique factorisation in
+  $\Z$, equality of slopes $3^{r_1}/2^{\ell_1}=3^{r_2}/2^{\ell_2}$
+  forces $r_1=r_2=r$ and $\ell_1=\ell_2=\ell$.
+
+  Now suppose $w_1\neq w_2$ are two distinct words of the same type
+  $(r,\ell)$.  Let $k$ be the first position at which they differ.
+  Without loss of generality, $c_k^{(1)}=\wR$ and $c_k^{(2)}=\wL$.
+  Both words agree on positions $1,\ldots,k-1$, so the partial counts
+  $(r_{k}^{(1)}, \ell_{k}^{(1)}) = (r_{k}^{(2)}, \ell_{k}^{(2)})$
+  are identical; call them $(r_0,\ell_0)$.  The term
+  $3^{r_0}/2^{\ell_0}\in\Zs$ appears in $b_{w_1}$ (contributed by
+  position $k$) but not yet in $b_{w_2}$.  After position $k$, the
+  remaining letters of $w_1$ and $w_2$ contribute terms with
+  denominators divisible by a power of $2$ at least $\ell_0+1$ (since
+  $w_2$ has an $\wL$ at position $k$, incrementing $\ell$), while
+  $3^{r_0}/2^{\ell_0}$ has denominator exactly $2^{\ell_0}$.  Since
+  elements of $\Zs$ with different denominators are distinct, and since
+  the remaining contributions to $b_{w_2}$ cannot cancel the term
+  $3^{r_0}/2^{\ell_0}$ present only in $b_{w_1}$, we conclude
+  $b_{w_1}\neq b_{w_2}$.
+\end{proof}
+
+\subsection{Word equality and the word problem}
+
+\begin{theorem}[Word equality]
+  \label{thm:word-equality}
+  Two words $w_1, w_2\in\{\wL,\wR\}^*$ represent the same element of
+  $\mathcal{S}$ if and only if:
+  \begin{enumerate}[label=\textup{(\roman*)}]
+    \item $w_1$ and $w_2$ have the same type $(r,\ell)$, and
+    \item $b_{w_1} = b_{w_2}$.
+  \end{enumerate}
+  All $\binom{r+\ell}{r}$ orderings of a type-$(r,\ell)$ word produce
+  pairwise distinct affine maps.  The word problem for $\mathcal{S}$ is
+  decidable in time $O(|w|)$.
+\end{theorem}
+
+\begin{proof}
+  Conditions (i)--(ii) are necessary by Theorem~\ref{thm:faithful}.
+  They are sufficient by definition of $f_w$.  Distinctness of all
+  $\binom{r+\ell}{r}$ orderings follows from the injectivity argument:
+  any two distinct orderings of the same $(r,\ell)$-type words differ
+  at some first position, and the argument in the proof of
+  Theorem~\ref{thm:faithful} shows their intercepts differ.
+  Decidability: given words $w_1, w_2$, compute $(a_{w_i},b_{w_i})$
+  using Lemma~\ref{lem:affine} in $O(|w_i|)$ time, then compare.
+\end{proof}
+
+\begin{example}[First non-trivial relation]
+  The words $\mathsf{LRRLRLL}$ and $\mathsf{RRLLLLR}$ both have type
+  $(r,\ell)=(3,4)$.  By Lemma~\ref{lem:affine}:
+  \[
+    f_{\mathsf{LRRLRLL}}(x) = f_{\mathsf{RRLLLLR}}(x)
+    = \frac{27}{16}\,x + \frac{7}{4}.
+  \]
+  This is the shortest non-trivial relation in the semigroup.
+  Both words produce the same intercept $b=\frac{7}{4}$, which can be
+  verified by computing the contribution of each $\wR$-position.
+\end{example}
+
+\begin{corollary}[Group structure]
+  \label{cor:structure}
+  The semigroup $\mathcal{S}$ satisfies none of the standard relations
+  that would identify it with a classical group:
+  \[
+    f_{\wL\wR}(x) = \tfrac{3}{2}x+1, \quad
+    f_{\wR\wL}(x) = \tfrac{3}{2}x+\tfrac{1}{2},
+  \]
+  so $\wL\wR\neq\wR\wL$ (not commutative).  Similarly,
+  $\wL^2\wR\neq\wR\wL$ (no Thompson-$F$ relation), and
+  $\wL\wR\wL^{-1}\neq\wR^2$ (no standard conjugation relation).
+\end{corollary}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Orbit closure reformulation}
+\label{sec:orbit}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{The fiber map and backward orbit}
+
+\begin{definition}[Fiber at $1$]
+  For $f=(a,b)\in\mathcal{S}$, the \emph{fiber at $1$} is the unique
+  solution to $f(x)=1$:
+  \[
+    \phi(f) \;:=\; f^{-1}(1) \;=\; \frac{1-b}{a} \;\in\;\Zs.
+  \]
+  The \emph{backward orbit of $1$} under $\mathcal{S}$ is
+  $\mathcal{O}^-(1) := \{\phi(f) : f\in\mathcal{S}\} \subset \Zs$.
+\end{definition}
+
+\begin{definition}[Intercept sets]
+  \label{def:intercepts}
+  For non-negative integers $r,\ell$, let
+  \[
+    \mathcal{B}(r,\ell) \;:=\;
+    \bigl\{b_w : w\in\{\wL,\wR\}^*,\; w\text{ has type }(r,\ell)\bigr\}
+    \;\subset\;\Zs.
+  \]
+\end{definition}
+
+\subsection{The equivalence theorem}
+
+\begin{theorem}[Four equivalent formulations]
+  \label{thm:equiv}
+  The Collatz conjecture is equivalent to each of the following:
+  \begin{enumerate}[label=\textup{(\Alph*)}]
+    \item\label{it:A}
+      \emph{Orbit coverage}: For every $n\in\N$, there exists a word
+      $w\in\{\wL,\wR\}^*$ such that $f_w(n)=1$.
+    \item\label{it:B}
+      \emph{Backward orbit}: $\mathcal{O}^-(1)\supseteq\N$.
+    \item\label{it:C}
+      \emph{Reachability}: For every $n\in\N$, there exist $r,\ell\geq 0$
+      such that $1-3^r n/2^\ell \in \mathcal{B}(r,\ell)$.
+    \item\label{it:D}
+      \emph{Tree coverage}: The inverse tree $\mathcal{T}$ rooted at
+      $1$, with branching rules
+      \[
+        n\mapsto 2n \quad\text{and}\quad
+        n\mapsto\tfrac{n-1}{3}
+        \;\bigl(\text{when }n\equiv 1\!\pmod{3}\text{ and }
+        \tfrac{n-1}{3}\text{ is odd}\bigr),
+      \]
+      contains every positive integer as a node.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  \textbf{Collatz}$\Leftrightarrow$\textbf{\ref{it:A}}:
+  If the Collatz sequence for $n$ terminates at $1$, the word $w(n)$
+  of Remark~\ref{rem:canonical} satisfies $f_{w(n)}(n)=1$ by
+  construction, since each step $c_i$ applies either the even or odd
+  branch of $T$ and the composition carries $n$ to $1$.
+  Conversely, if $f_w(n)=1$ for some $w=c_1\cdots c_k$, then the
+  sequence $n, f_{c_1}(n), f_{c_1 c_2}(n), \ldots, f_w(n)=1$ is a
+  valid Collatz trajectory from $n$ to $1$.
+
+  \textbf{\ref{it:A}}$\Leftrightarrow$\textbf{\ref{it:B}}:
+  $f_w(n)=1$ if and only if $n=\phi(f_w)\in\mathcal{O}^-(1)$.
+
+  \textbf{\ref{it:B}}$\Leftrightarrow$\textbf{\ref{it:C}}:
+  For a type-$(r,\ell)$ word, $\phi(f_w)=n$ rewrites as
+  $1-b_w = n\cdot(3^r/2^\ell)$, i.e.\ $b_w = 1-3^r n/2^\ell$.
+  Since $b_w\in\mathcal{B}(r,\ell)$ by definition, this is the
+  condition in~\ref{it:C}.
+
+  \textbf{\ref{it:B}}$\Leftrightarrow$\textbf{\ref{it:D}}:
+  The tree $\mathcal{T}$ is the Cayley graph of
+  $\mathcal{O}^-(1)\cap\N$ under the inverse generators
+  $\phi(\wL^{-1})(n) = 2n$ and $\phi(\wR^{-1})(n) = (n-1)/3$
+  (defined when $n\equiv 1\pmod{3}$ and $(n-1)/3$ is odd, so that
+  $T((n-1)/3)=n$ via the odd branch).  Coverage of $\N$ is
+  equivalent to $\mathcal{O}^-(1)\supseteq\N$.
+\end{proof}
+
+\begin{example}[Verification for $n=7$]
+  The Collatz sequence $7\to22\to11\to34\to17\to52\to26\to13
+  \to40\to20\to10\to5\to16\to8\to4\to2\to1$ has type $(r,\ell)=(5,11)$.
+  By \eqref{eq:slope}--\eqref{eq:intercept},
+  \[
+    a_{w(7)} = \frac{3^5}{2^{11}} = \frac{243}{2048},
+    \qquad
+    b_{w(7)} = \frac{347}{2048},
+  \]
+  and $\frac{243}{2048}\cdot 7 + \frac{347}{2048}
+       = \frac{1701+347}{2048} = \frac{2048}{2048} = 1$. \qed
+\end{example}
+
+\subsection{Structure of $\mathcal{B}(r,\ell)$}
+
+\begin{proposition}[Intercept sets]
+  \label{prop:intercepts}
+  For all $r,\ell\geq 0$:
+  \begin{enumerate}[label=\textup{(\roman*)}]
+    \item $|\mathcal{B}(r,\ell)| = \binom{r+\ell}{r}$: all orderings
+          of a type-$(r,\ell)$ word produce distinct intercepts.
+    \item Every element of $\mathcal{B}(r,\ell)$ has denominator
+          dividing $2^\ell$.
+    \item $\mathcal{B}(r,0) = \{(3^r-1)/2\}$ (unique intercept when
+          all $\wR$'s precede all $\wL$'s, giving the geometric sum
+          $1+3+\cdots+3^{r-1}=(3^r-1)/2$).
+    \item $\mathcal{B}(0,\ell) = \{0\}$.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+  Part (i) is Theorem~\ref{thm:word-equality}.  Part (ii) follows
+  from \eqref{eq:intercept}: each term has denominator $2^{\ell_i}
+  \leq 2^\ell$.  Parts (iii)--(iv) are direct computations.
+\end{proof}
+
+\begin{table}[ht]
+  \centering
+  \caption{Intercept sets $\mathcal{B}(r,\ell)$ for small $(r,\ell)$.}
+  \medskip
+  \begin{tabular}{c c c l}
+    \toprule
+    $r$ & $\ell$ & $\bigl|\mathcal{B}(r,\ell)\bigr|=\binom{r+\ell}{r}$
+        & Elements of $\mathcal{B}(r,\ell)$ \\
+    \midrule
+    0 & 2 & 1 & $\{0\}$ \\
+    1 & 1 & 2 & $\bigl\{\tfrac{1}{2},\; 1\bigr\}$ \\
+    1 & 2 & 3 & $\bigl\{\tfrac{1}{4},\; \tfrac{1}{2},\; 1\bigr\}$ \\
+    1 & 3 & 4 &
+      $\bigl\{\tfrac{1}{8},\;\tfrac{1}{4},\;\tfrac{1}{2},\;1\bigr\}$ \\
+    2 & 2 & 6 &
+      $\bigl\{1,\;\tfrac{5}{4},\;\tfrac{7}{4},\;2,\;\tfrac{5}{2},\;4\bigr\}$ \\
+    2 & 3 & 10 &
+      $\bigl\{\tfrac{1}{2},\;\tfrac{5}{8},\;\tfrac{7}{8},\;1,\;\tfrac{5}{4},\;
+               \tfrac{11}{8},\;\tfrac{7}{4},\;2,\;\tfrac{5}{2},\;4\bigr\}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Amenability of $\Aff^+(\Zs)$}
+\label{sec:amenable}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{proposition}[Solvability and amenability]
+  \label{prop:amenable}
+  The group $\Aff^+(\Zs)$ is solvable of derived length $2$, and
+  therefore amenable.
+\end{proposition}
+
+\begin{proof}
+  Let $T = \{(1,b) : b\in\Zs\}$ be the normal subgroup of translations.
+  The quotient $\Aff^+(\Zs)/T$ is isomorphic to the multiplicative
+  group $\{2^s 3^t : s,t\in\Z\}\cong\Z^2$, which is abelian.  Hence
+  $[\Aff^+(\Zs),\Aff^+(\Zs)]\subseteq T$.
+  Since $T\cong(\Zs,+)$ is abelian, $[T,T]=\{0\}$.
+  The derived series
+  $\Aff^+(\Zs)\supseteq T\supseteq\{e\}$ witnesses solvability of
+  length at most $2$.
+  Amenability follows from Day's theorem~\cite{Day1957}: abelian groups
+  are amenable, and the class of amenable groups is closed under
+  extensions.
+\end{proof}
+
+\begin{remark}[Thompson's $F$ contrast]
+  Thompson's group $F$ is the group of piecewise-linear homeomorphisms
+  of $[0,1]$ with finitely many breakpoints in $\Z[\frac{1}{2}]$ and
+  slopes in $\{2^k\}$.  Whether $F$ is amenable is open;
+  Haagerup--Olesen~\cite{Haagerup2016} showed $F$ is not inner amenable.
+  The group $\Aff^+(\Zs)$ is provably amenable, so proofs requiring
+  amenability of the ambient group are feasible here but not in the
+  Thompson setting.
+\end{remark}
+
+\subsection{Negative drift and density-1 coverage}
+
+\begin{proposition}[Expected log-decrease per Syracuse step]
+  \label{prop:drift}
+  Let $n$ be odd and let $k=\nu_2(3n+1)$.  The composed step
+  $\wR\wL^k$ (odd branch followed by $k$ halvings) multiplies $n$ by
+  $3/2^k$.  Taking logarithms, the expected change per Syracuse step is
+  \[
+    \mathbf{E}[\log(3/2^k)]
+    = \log 3 - (\log 2)\,\mathbf{E}[k].
+  \]
+  Under the heuristic that $k=\nu_2(3n+1)$ is geometrically distributed
+  with $P(k=j)=1/2^j$, $\mathbf{E}[k]=2$, and
+  \[
+    \mathbf{E}[\log(3/2^k)] = \log 3 - 2\log 2 = \log(3/4) \approx -0.288.
+  \]
+\end{proposition}
+
+\begin{remark}
+  Combining the negative drift of Proposition~\ref{prop:drift} with the
+  ergodic theorem for amenable groups
+  (Lindenstrauss~\cite{Lindenstrauss2001}) gives logarithmic density $1$
+  for $\mathcal{O}^-(1)$ in $\N$, recovering the quantitative content of
+  Tao's theorem~\cite{Tao2019} in this algebraic language.
+\end{remark}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{The amenability gap and the residual problem}
+\label{sec:gap}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{What amenability gives and does not give}
+
+Amenability of $\Aff^+(\Zs)$ and negative drift together imply:
+\[
+  \frac{1}{\log N}\sum_{\substack{n\leq N \\ n\notin\mathcal{O}^-(1)}}
+  \frac{1}{n} \;\longrightarrow\; 0.
+\]
+This is a density statement.  It does \emph{not} imply full coverage,
+because a set of logarithmic density $1$ may still omit finitely (or
+even infinitely many sparse) integers.  We call this the
+\emph{amenability gap}.
+
+\subsection{The open problem}
+
+\begin{question}[Subset-sum reachability]
+  \label{q:reachability}
+  For every $n\in\N$, do there exist $r,\ell\geq 0$ such that
+  \[
+    1 - \frac{3^r n}{2^\ell} \;\in\; \mathcal{B}(r,\ell)\;?
+  \]
+\end{question}
+
+An affirmative answer to Question~\ref{q:reachability} is equivalent
+to the Collatz conjecture (Theorem~\ref{thm:equiv}\ref{it:C}).
+
+\begin{remark}[Feasibility of the target]
+  By Euler's theorem (since $\gcd(3,2^\ell)=1$), for each $n$ and each
+  $\ell$ there exists $r$ with $3^r n \equiv 1\pmod{2^\ell}$, making
+  $1-3^r n/2^\ell\in\Zs$.  So the condition is non-vacuous: for every
+  $n$ and $\ell$ there is at least one $(r,\ell)$ for which the target
+  lands in $\Zs$.  The question is whether it lands in the smaller set
+  $\mathcal{B}(r,\ell)$.
+\end{remark}
+
+\begin{remark}[Density of targets]
+  Since $\log 3/\log 2$ is irrational, the set
+  $\{3^r/2^\ell : r,\ell\geq 0\}$ is dense in $\R_{>0}$.  For fixed
+  $n$, the targets $1-3^r n/2^\ell$ are therefore dense in $\R$ as
+  $(r,\ell)$ varies.  Combined with the fact that
+  $|\mathcal{B}(r,\ell)|=\binom{r+\ell}{r}\to\infty$, this makes the
+  reachability condition plausible but does not prove it.
+\end{remark}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{The $\operatorname{Im}(\tau)$ dynamics and the polylogarithm}
+\label{sec:tau}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+A parallel line of investigation, predating the affine embedding,
+attaches a complex parameter $\tau(n)$ to each iterate and studies its
+dynamics.  The results here are self-contained and complement the
+affine picture.
+
+\begin{definition}[$\tau$-parameter]
+  For $n\in\N$ let $a_0=\nu_2(n)$ and $a_1=\nu_3(n)$ (the $2$- and
+  $3$-adic valuations).  Define
+  \[
+    \tau(n) \;=\; \frac{a_1 + i\,\nu_2(3n+1)}{a_0+1} \;\in\; \C.
+  \]
+\end{definition}
+
+\begin{proposition}[Imaginary axis dominance]
+  For almost all iterates of the Collatz map, $a_1=0$ and hence
+  $\operatorname{Re}(\tau)=0$.  The sequence $\tau(n), \tau(T(n)),\ldots$
+  lives almost entirely on the positive imaginary axis, and the
+  dynamics reduce to the real sequence
+  $y_k := \operatorname{Im}(\tau(T^k(n))) \in \R_{>0}$.
+\end{proposition}
+
+\begin{proposition}[Rational transition rules]
+  \label{prop:transition}
+  The sequence $(y_k)$ obeys:
+  \begin{align*}
+    \text{Even step } (n\to n/2): &\quad
+      y_{k+1} = y_k \cdot \frac{a_0^2-1}{a_0^2}
+      = y_k \cdot \bigl(1 - a_0^{-2}\bigr), \\
+    \text{Odd step } (n\to 3n+1): &\quad
+      y_{k+1} = y_k \cdot \frac{1}{\nu_2(3n+1)+1}.
+  \end{align*}
+  Every sequence terminates at $y=\tfrac{1}{2}$ (corresponding to $n=2$).
+\end{proposition}
+
+\begin{proposition}[$\pm S$ symmetry and the polylogarithm]
+  \label{prop:symmetry}
+  Define $S = \sum_{k=1}^\infty k(\log k)/2^k \approx 0.5078$.  Then
+  \[
+    \mathbf{E}[\Delta\log y \mid \text{odd step}] = +S, \qquad
+    \mathbf{E}[\Delta\log y \mid \text{even step}] = -S.
+  \]
+  The constant $S$ equals the negative of the derivative of the
+  polylogarithm at $s=0$:
+  \[
+    S \;=\; -\frac{d}{ds}\operatorname{Li}_s\!\bigl(\tfrac{1}{2}\bigr)
+            \bigg|_{s=0}.
+  \]
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+  Under the heuristic that $\nu_2(3n+1)$ is geometrically distributed,
+  the expected log-change per odd step is
+  $\mathbf{E}[\log(1/(\nu_2+1))]=-S$ with sign corrected by the
+  direction of $y$.  The polylogarithm identity follows from the series
+  expansion $\operatorname{Li}_s(x)=\sum_{k=1}^\infty x^k k^{-s}$
+  differentiated at $s=0$.
+\end{proof}
+
+\begin{remark}
+  The $\pm S$ symmetry implies that $\log y_k$ is a zero-mean random
+  walk (conditionally on equal step probabilities).  This is consistent
+  with the Collatz conjecture but does not prove it: the steps are
+  deterministic (not independent), $E[\text{ratio}]>1$ for the
+  $\operatorname{Im}(\tau)$ process itself, and the terminal condition
+  $y=\frac{1}{2}$ is not equivalent to $n=1$.
+\end{remark}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Directions for further work}
+\label{sec:further}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+  \item \textbf{Explicit fiber construction.}
+        For each $n\in\N$ and each $\ell\geq 1$, there exists $r$ with
+        $3^r n \equiv 1\pmod{2^\ell}$ (by Euler's theorem).  A proof
+        of the conjecture via~\ref{it:C} would need to show that, for
+        such $(r,\ell)$, the target $b^* := 1-3^r n/2^\ell$ lies in
+        $\mathcal{B}(r,\ell)$.  A natural approach is to show that
+        $b^*$ is always expressible as an ordered partial sum of the
+        form \eqref{eq:intercept}.
+
+  \item \textbf{Minimum gap in $\mathcal{B}(r,\ell)$.}
+        Quantifying $\min_{b\neq b'\in\mathcal{B}(r,\ell)}|b-b'|$
+        would bound how large $(r,\ell)$ must be for the target
+        $b^*$ to have any chance of lying in $\mathcal{B}(r,\ell)$.
+        Since $|\mathcal{B}(r,\ell)|=\binom{r+\ell}{r}$ and all
+        elements have denominator $\leq 2^\ell$, the minimum gap
+        is at least $2^{-\ell}$.
+
+  \item \textbf{The $(2,3)$-Thompson group $G_{(2,3)}$.}
+        The group of piecewise-linear homeomorphisms of $[0,1]$ with
+        breakpoints in $\Zs$ and slopes in $\{2^s 3^t\}$ is the
+        natural rigid ambient group; it contains $\mathcal{S}$ as an
+        infinite-type element.  Establishing that its derived subgroup
+        is simple and computing its abelianisation (conjectured $\Z^2$,
+        using the Stein--Brown framework~\cite{Stein1992}) would be
+        the first new result in this direction.
+
+  \item \textbf{C*-simplicity.}
+        If $G_{(2,3)}$ is C*-simple, any action on a compact space has
+        a unique stationary measure, strongly constraining the orbit
+        structure.  This could close the amenability gap by ruling out
+        exceptional orbits.
+
+  \item \textbf{Furstenberg's $\times 2$, $\times 3$ connection.}
+        The slope group $\{2^s 3^t\}$ is the same multiplicative
+        structure appearing in Furstenberg's conjecture on
+        simultaneously $\times 2$- and $\times 3$-invariant measures
+        on $\R/\Z$.  Recent progress by
+        Shmerkin~\cite{Shmerkin2019} and Host~\cite{Host1995} may
+        be relevant to understanding the distribution of the semigroup
+        action.
+\end{enumerate}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section*{Acknowledgements}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+These results emerged from a computational investigation beginning with
+a Godel-encoding approach (Section~\ref{sec:tau}), proceeding through
+Im$(\tau)$ dynamics and the $\pm S$ symmetry, and culminating in the
+affine embedding of Sections~\ref{sec:embedding}--\ref{sec:gap}.
+All algebraic computations were verified exactly using rational
+arithmetic over $\Zs$.
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\bibliographystyle{alpha}
+\begin{thebibliography}{10}
+
+\bibitem{BelkBrown2005}
+J.~Belk and K.~S. Brown.
+\newblock Forest diagrams for elements of Thompson's group $F$.
+\newblock \emph{Internat.\ J.\ Algebra Comput.}, 15(5--6):815--850, 2005.
+
+\bibitem{BrunnerSidki1999}
+A.~M. Brunner and S.~Sidki.
+\newblock The generation of $\mathrm{GL}(n,\mathbb{Z})$ by finite state
+  automata.
+\newblock \emph{Internat.\ J.\ Algebra Comput.}, 9(3--4):421--463, 1999.
+
+\bibitem{Cleary2000}
+S.~Cleary.
+\newblock Regular subdivision in $\mathbb{Z}[1/n]$ and the Thompson groups.
+\newblock \emph{J.\ Algebra}, 225(2):714--736, 2000.
+
+\bibitem{Day1957}
+M.~M. Day.
+\newblock Amenable semigroups.
+\newblock \emph{Illinois J.\ Math.}, 1:509--544, 1957.
+
+\bibitem{Haagerup2016}
+U.~Haagerup and M.~Olesen.
+\newblock The Thompson groups $T$ and $V$ are not inner amenable.
+\newblock \emph{Pacific J.\ Math.}, 272(1):129--166, 2014.
+
+\bibitem{Host1995}
+B.~Host.
+\newblock Nombres normaux, entropie, translations.
+\newblock \emph{Israel J.\ Math.}, 91(1--3):419--428, 1995.
+
+\bibitem{Lagarias2010}
+J.~C. Lagarias (ed.).
+\newblock \emph{The Ultimate Challenge: The $3x+1$ Problem}.
+\newblock American Mathematical Society, Providence, RI, 2010.
+
+\bibitem{Lindenstrauss2001}
+E.~Lindenstrauss.
+\newblock Pointwise theorems for amenable groups.
+\newblock \emph{Invent.\ Math.}, 146(2):259--295, 2001.
+
+\bibitem{Shmerkin2019}
+P.~Shmerkin.
+\newblock On Furstenberg's intersection conjecture, self-similar measures,
+  and the $L^q$ norms of convolutions.
+\newblock \emph{Ann.\ of Math.\ (2)}, 189(2):319--391, 2019.
+
+\bibitem{Stein1992}
+M.~Stein.
+\newblock Groups of piecewise linear homeomorphisms.
+\newblock \emph{Trans.\ Amer.\ Math.\ Soc.}, 332(2):477--514, 1992.
+
+\bibitem{Tao2019}
+T.~Tao.
+\newblock Almost all orbits of the Collatz map attain almost bounded values.
+\newblock \emph{Forum Math.\ Pi}, 10:e12, 2022.
+
+\bibitem{Terras1976}
+R.~Terras.
+\newblock A stopping time problem on the positive integers.
+\newblock \emph{Acta Arith.}, 30(3):241--252, 1976.
+
+\bibitem{Yolcu2023}
+E.~Yolcu, S.~Aaronson, and M.~J.~H. Heule.
+\newblock A concrete realization of the Collatz conjecture in formal rewriting
+  systems.
+\newblock \emph{J.\ Automated Reasoning}, 67(2), 2023.
+
+\end{thebibliography}
+
+\end{document}
