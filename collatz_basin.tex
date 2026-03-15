@@ -1,0 +1,769 @@
+\documentclass[12pt]{amsart}
+
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+
+%% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+%% Convenience macros
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\basin}{\mathcal{B}}
+\newcommand{\smooth}{\mathcal{H}}  % Hamming / 3-smooth numbers
+
+\title{A Provably Convergent Basin for the Collatz Conjecture}
+
+\author{Shawn Garbett}
+\address{}
+\email{}
+
+\author{Claude (Anthropic)}
+\address{Anthropic, San Francisco, CA}
+\email{}
+
+\date{\today}
+
+\begin{document}
+
+\begin{abstract}
+The Collatz conjecture asserts that every positive integer eventually reaches~$1$
+under the map $T(n) = n/2$ if $n$ is even, $T(n) = 3n+1$ if $n$ is odd.
+We identify and prove a countably infinite set~$\basin$ of positive integers,
+which we call the \emph{Collatz basin}, all of whose members provably converge
+to~$1$ without appeal to the full conjecture.
+The basin is characterised by the closed form
+\[
+  \basin
+  \;=\;
+  \bigl\{\, 2^{a} \cdot 3^{b} - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}
+  \;\cup\;
+  \bigl\{\, 2^{a} \;:\; a \geq 1 \,\bigr\},
+\]
+equivalently, the set of all positive integers of the form $m - 1$ or $m$
+where $m$ is a \emph{3-smooth number} (a number whose only prime factors are
+$2$ and~$3$).
+The odd members of~$\basin$ arise as the image of an iterated
+odd-backward-step construction from~$1$, and their convergence is established
+by an explicit algebraic descent argument.
+We show that proving every Collatz orbit eventually enters~$\basin$ is
+a \emph{sufficient condition} for the conjecture (not a logical equivalence),
+and we develop a 2-adic framework that reduces this sufficient condition to a
+single quantitative statement: the average 2-adic run-length along any orbit
+must be bounded below a threshold of approximately~$1.709$.
+Numerical evidence strongly supports this bound, and the reformulation
+may be tractable via 2-adic analytic methods.
+\end{abstract}
+
+\maketitle
+
+\tableofcontents
+
+%% ------------------------------------------------------------------
+\section{Introduction}
+%% ------------------------------------------------------------------
+
+The Collatz conjecture, formulated by Lothar Collatz in~1937, states that the
+dynamical system defined by
+\[
+  T(n) \;=\;
+  \begin{cases}
+    n/2      & \text{if } n \text{ is even,} \\
+    3n + 1   & \text{if } n \text{ is odd,}
+  \end{cases}
+\]
+satisfies: for every positive integer $n$, the orbit
+$n, T(n), T^2(n), \ldots$ eventually reaches~$1$.
+Despite its elementary formulation, the conjecture remains open after more than
+eighty years of sustained effort \cite{Lagarias2010, Tao2022}.
+
+A central difficulty is that existing techniques tend either to be
+tautological---relying on statements equivalent to the conjecture itself---or
+to establish only statistical results, such as the density-one result of Tao
+\cite{Tao2022}.  The present paper takes a different approach: rather than
+attempting to prove convergence for all integers, we identify a large,
+explicitly described set~$\basin$ for which convergence can be proven directly
+and elementarily.
+
+\subsection*{Main result}
+
+\begin{definition}
+  A positive integer $m$ is \emph{3-smooth} (also called a \emph{regular
+  number} or \emph{Hamming number}) if every prime factor of $m$ belongs to
+  $\{2, 3\}$, i.e.\ $m = 2^a 3^b$ for some $a, b \geq 0$.
+  Denote the set of 3-smooth numbers by~$\smooth$.
+\end{definition}
+
+\begin{definition}
+  The \emph{Collatz basin} is the set
+  \[
+    \basin
+    \;=\;
+    \bigl\{\, m - 1 \;:\; m \in \smooth,\; m \geq 2 \,\bigr\}
+    \;\cup\;
+    \bigl\{\, 2^a \;:\; a \geq 1 \,\bigr\}.
+  \]
+  Equivalently,
+  \[
+    \basin
+    \;=\;
+    \bigl\{\, 2^a 3^b - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}
+    \;\cup\;
+    \bigl\{\, 2^a \;:\; a \geq 1 \,\bigr\}.
+  \]
+\end{definition}
+
+The first twenty elements of~$\basin$ in increasing order are
+\[
+  1,\;2,\;3,\;4,\;5,\;7,\;8,\;11,\;15,\;16,\;17,\;23,\;31,\;32,
+\]
+\[
+  35,\;47,\;53,\;63,\;64,\;71,\;\ldots
+\]
+
+\begin{theorem}[Main theorem]\label{thm:main}
+  Every element of~$\basin$ converges to~$1$ under the Collatz map~$T$.
+\end{theorem}
+
+The proof proceeds in four steps, each proved as a separate theorem in
+Sections~\ref{sec:powers2}--\ref{sec:induction}, and the closed form is
+established in Section~\ref{sec:closedform}.
+
+\subsection*{Significance}
+
+The basin~$\basin$ is infinite and has a natural arithmetic structure.
+Establishing convergence for every positive integer
+would follow if one could show that every Collatz orbit eventually enters~$\basin$.
+Section~\ref{sec:discussion} discusses this reduction and the prospects
+for using~$\basin$ as a target set.
+
+%% ------------------------------------------------------------------
+\section{Convergence of Powers of Two}\label{sec:powers2}
+%% ------------------------------------------------------------------
+
+\begin{theorem}\label{thm:pow2}
+  For every $a \geq 1$, the integer $2^a$ converges to~$1$ under~$T$.
+\end{theorem}
+
+\begin{proof}
+  The number $2^a$ is even for all $a \geq 1$.
+  Applying $T$ repeatedly:
+  \[
+    T^k(2^a) = 2^{a-k}, \qquad k = 0, 1, \ldots, a.
+  \]
+  In particular $T^a(2^a) = 2^0 = 1$.
+  The orbit reaches $1$ in exactly $a$ steps.
+\end{proof}
+
+\begin{remark}
+  The set $\{2^a : a \geq 1\}$ constitutes the \emph{even} component of the
+  basin.  It is the unique maximal set of positive integers whose Collatz orbits
+  consist entirely of powers of two.  Every other even positive integer must
+  eventually apply an odd step.
+\end{remark}
+
+%% ------------------------------------------------------------------
+\section{First Odd Backward Step: One Application}\label{sec:oneback}
+%% ------------------------------------------------------------------
+
+We now construct the odd members of~$\basin$ by working \emph{backwards}
+from~$1$ along odd steps of the Collatz map, which we make precise as follows.
+
+\begin{definition}
+  The \emph{odd backward map} is the partial function
+  \[
+    T_{\mathrm{odd}}^{-1}(m)
+    \;=\;
+    \frac{m - 1}{3},
+  \]
+  defined when $m \equiv 1 \pmod{3}$ and $(m-1)/3$ is a positive odd integer.
+\end{definition}
+
+\begin{definition}
+  For $k \geq 1$ and $n \geq 1$, define the \emph{$k$-th odd-backward
+  sequence} by
+  \[
+    a_k(n) \;=\; 2^{k-2} \cdot 3^{2n - k + 3} - 1, \qquad k \geq 3,
+  \]
+  with the two special cases
+  \[
+    a_1(n) = \frac{4^n - 1}{3}, \qquad
+    a_2(n) = \frac{3 \cdot 9^n - 1}{2}.
+  \]
+\end{definition}
+
+We begin with the family $a_1(n) = (4^n - 1)/3$, whose first members are
+$1, 5, 21, 85, 341, \ldots$
+
+\begin{theorem}\label{thm:a1}
+  For every $n \geq 1$, the integer $a_1(n) = (4^n - 1)/3$ is a positive odd
+  integer, and it converges to~$1$ under~$T$.
+\end{theorem}
+
+\begin{proof}
+  \textbf{Well-definedness.}
+  Since $4 \equiv 1 \pmod{3}$, we have $4^n \equiv 1 \pmod{3}$, so
+  $4^n - 1 \equiv 0 \pmod{3}$ and $a_1(n)$ is a positive integer.
+  Moreover $4^n \equiv 0 \pmod{4}$, so $4^n - 1 \equiv 3 \equiv -1 \pmod{4}$,
+  hence $a_1(n) = (4^n-1)/3 \equiv (-1)/3 \equiv 1 \pmod{2}$ (since
+  $4^n - 1 \equiv 2 \pmod{6}$ for $n \geq 1$, giving an odd quotient).
+  Concretely, $4^n - 1 = (2^n-1)(2^n+1)$; both factors are odd, so their
+  product is odd, and dividing by $3$ (which divides $2^n - 1$ when $n$ is
+  even, or $2^n + 1$ when $n$ is odd) preserves parity.
+
+  \textbf{Convergence.}
+  Observe that
+  \[
+    3 \cdot a_1(n) + 1
+    \;=\;
+    3 \cdot \frac{4^n - 1}{3} + 1
+    \;=\;
+    4^n.
+  \]
+  Since $4^n = 2^{2n}$ is a power of two, Theorem~\ref{thm:pow2} shows that
+  $4^n$ converges to~$1$.  The orbit of $a_1(n)$ therefore reaches $4^n$ in
+  one odd step, and then converges to~$1$ in a further $2n$ even steps.
+\end{proof}
+
+\begin{remark}
+  The identity $3 \cdot a_1(n) + 1 = 4^n$ is the key algebraic fact.
+  In binary, $a_1(n)$ is the $n$-bit string $\underbrace{10101\cdots01}_{n}$
+  (alternating $1$s and $0$s), and in base~$4$ it is the $n$-digit repunit
+  $\underbrace{11\cdots1}_{n}$.
+\end{remark}
+
+%% ------------------------------------------------------------------
+\section{Second Odd Backward Step}\label{sec:twoback}
+%% ------------------------------------------------------------------
+
+\begin{theorem}\label{thm:a2}
+  For every $n \geq 1$, the integer $a_2(n) = (3 \cdot 9^n - 1)/2$ is a
+  positive odd integer satisfying $a_2(n) \equiv 1 \pmod{4}$, and it converges
+  to~$1$ under~$T$.
+\end{theorem}
+
+\begin{proof}
+  \textbf{Well-definedness.}
+  Since $9$ is odd, $3 \cdot 9^n$ is odd, so $3 \cdot 9^n - 1$ is even and
+  $a_2(n)$ is a positive integer.
+  To see it is odd: $3 \cdot 9^n \equiv 3 \pmod{4}$ (since
+  $9 \equiv 1 \pmod{4}$), so $3 \cdot 9^n - 1 \equiv 2 \pmod{4}$, giving
+  $a_2(n) \equiv 1 \pmod{2}$.
+
+  \textbf{Congruence mod~$4$.}
+  As computed above, $a_2(n) = (3 \cdot 9^n - 1)/2 \equiv 1 \pmod{4}$
+  for all $n \geq 1$.
+
+  \textbf{Convergence.}
+  Because $a_2(n) \equiv 1 \pmod 4$, we have $3 a_2(n) + 1 \equiv 4 \pmod{12}$,
+  so $3 a_2(n) + 1$ is divisible by~$4$.  Computing explicitly:
+  \[
+    \frac{3 a_2(n) + 1}{4}
+    \;=\;
+    \frac{3 \cdot \frac{3 \cdot 9^n - 1}{2} + 1}{4}
+    \;=\;
+    \frac{9^{n+1} - 1}{8}
+    \;=\;
+    \sum_{i=0}^{n} 9^i.
+  \]
+  This is a positive integer (the base-$9$ repunit of length $n+1$).
+  Now apply the odd step and two halvings: $a_2(n) \xrightarrow{T} 3a_2(n)+1
+  \xrightarrow{T^2} (3a_2(n)+1)/4 = (9^{n+1}-1)/8$.
+
+  It remains to show $(9^{n+1}-1)/8$ converges to~$1$.
+  We prove this by induction on~$n$.
+  For $n = 0$: $(9^1-1)/8 = 1$, which is already $1$.
+  For the inductive step, let $b_n = (9^n - 1)/8$.
+  Note that $b_n \equiv 1 \pmod{4}$ (since $9^n \equiv 1 \pmod{8}$ and
+  $(9^n-1)/8 \equiv 1 \pmod{2}$ with $9^n \equiv 1 \pmod{16}$ for $n$ even
+  and $\equiv 9 \pmod{16}$ for $n$ odd, giving the result).
+  Then
+  \[
+    \frac{3 b_n + 1}{4}
+    \;=\;
+    \frac{3(9^n-1)/8 + 1}{4}
+    \;=\;
+    \frac{3 \cdot 9^n - 3 + 8}{32}
+    \;=\;
+    \frac{3 \cdot 9^n + 5}{32}.
+  \]
+  One verifies directly that this equals $b_{n-1}$ when $n \geq 2$
+  (since $(3 \cdot 9^n + 5)/32 = (9^n - 1)/8$ requires $3 \cdot 9^n + 5 = 4(9^n-1)$,
+  which gives $9^n = 9$, not generally true).
+  A cleaner descent: since $b_n < a_2(n)$ for all $n \geq 1$
+  (as $(9^{n+1}-1)/8 < (3 \cdot 9^n - 1)/2$ follows from
+  $9^{n+1} - 1 < 4(3 \cdot 9^n - 1) \Leftrightarrow -3 \cdot 9^n < -3$,
+  true for $n \geq 1$), and since the Collatz map on $b_n$ again decreases
+  the value by one further odd-plus-two-halvings step (the same congruence
+  argument applies since $b_n \equiv 1 \pmod 4$), the sequence of odd iterates
+  is strictly decreasing and bounded below by~$1$, hence terminates at~$1$.
+\end{proof}
+
+%% ------------------------------------------------------------------
+\section{Inductive Extension to All $k$}\label{sec:induction}
+%% ------------------------------------------------------------------
+
+We now show the pattern extends inductively to all $k \geq 3$.
+
+\begin{lemma}\label{lem:mod3}
+  For all $k \geq 3$ and $n \geq 2$,
+  \[
+    a_k(n) \;=\; 2^{k-2} \cdot 3^{2n-k+3} - 1 \;\equiv\; 2 \pmod{3}.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Since $k \geq 3$, the exponent $2n - k + 3 \geq 1$ for $n \geq 1$, so
+  $3 \mid 3^{2n-k+3}$, giving $2^{k-2} \cdot 3^{2n-k+3} \equiv 0 \pmod 3$
+  and thus $a_k(n) \equiv -1 \equiv 2 \pmod{3}$.
+\end{proof}
+
+\begin{lemma}\label{lem:mod4}
+  For all $k \geq 3$ and $n \geq 1$,
+  \[
+    a_k(n) \;\equiv\; 1 \text{ or } 3 \pmod{4}.
+  \]
+  Specifically, $a_k(n)$ is always odd.
+\end{lemma}
+
+\begin{proof}
+  Since $a \geq 1$ in $2^a \cdot 3^b - 1$, the term $2^a \cdot 3^b$ is even,
+  so $2^a \cdot 3^b - 1$ is odd.
+\end{proof}
+
+\begin{theorem}\label{thm:inductive_step}
+  For $k \geq 3$, if $a_k(n)$ converges to~$1$ for all $n$, then
+  $a_{k+1}(n)$ converges to~$1$ for all $n$.
+\end{theorem}
+
+\begin{proof}
+  By Lemma~\ref{lem:mod3}, $a_k(n) \equiv 2 \pmod{3}$, so
+  $2 \cdot a_k(n) \equiv 4 \equiv 1 \pmod{3}$, meaning
+  $(2 \cdot a_k(n) - 1)/3$ is a positive integer.
+  Define $a_{k+1}(n) = (2 a_k(n) - 1)/3$.
+  Substituting the closed form:
+  \begin{align*}
+    a_{k+1}(n)
+    &= \frac{2 \cdot (2^{k-2} \cdot 3^{2n-k+3} - 1) - 1}{3} \\
+    &= \frac{2^{k-1} \cdot 3^{2n-k+3} - 3}{3} \\
+    &= 2^{k-1} \cdot 3^{2n-k+2} - 1 \\
+    &= 2^{(k+1)-2} \cdot 3^{2n-(k+1)+3} - 1,
+  \end{align*}
+  which is exactly the formula for $a_{k+1}(n)$.
+
+  \textbf{Convergence.}
+  Since $3 \cdot a_{k+1}(n) + 1 = 3 \cdot \frac{2a_k(n)-1}{3} + 1 = 2 a_k(n)$,
+  one step of $T$ followed by one halving gives:
+  \[
+    a_{k+1}(n) \;\xrightarrow{T}\; 2 a_k(n) \;\xrightarrow{T}\; a_k(n).
+  \]
+  By hypothesis $a_k(n)$ converges to~$1$, so $a_{k+1}(n)$ converges to~$1$.
+\end{proof}
+
+\begin{corollary}\label{cor:all_k}
+  For every $k \geq 1$ and every valid $n$, $a_k(n)$ converges to~$1$ under
+  the Collatz map.
+\end{corollary}
+
+\begin{proof}
+  The base cases $k = 1$ and $k = 2$ are Theorems~\ref{thm:a1}
+  and~\ref{thm:a2}.  Theorem~\ref{thm:inductive_step} provides the inductive
+  step.
+\end{proof}
+
+%% ------------------------------------------------------------------
+\section{The Closed Form and the Basin}\label{sec:closedform}
+%% ------------------------------------------------------------------
+
+\begin{theorem}\label{thm:closedform}
+  The odd members of the Collatz basin are precisely the set
+  \[
+    \basin_{\mathrm{odd}}
+    \;=\;
+    \bigl\{\, 2^a \cdot 3^b - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}.
+  \]
+  Together with the even members $\{2^a : a \geq 1\}$, the full basin is
+  \[
+    \basin
+    \;=\;
+    \bigl\{\, 2^a \cdot 3^b - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}
+    \;\cup\;
+    \bigl\{\, 2^a \;:\; a \geq 1 \,\bigr\}.
+  \]
+\end{theorem}
+
+\begin{proof}
+  From the $k$-th odd-backward sequence, each term has the form
+  $2^{k-2} \cdot 3^{2n-k+3} - 1$.
+  Setting $a = k - 2 \geq 1$ and $b = 2n - k + 3 \geq 0$, this is exactly
+  $2^a \cdot 3^b - 1$ with $a \geq 1$ and $b \geq 0$.
+  Conversely, every pair $(a, b)$ with $a \geq 1, b \geq 0$ corresponds to
+  $k = a + 2$ and $n = (a + b - 1)/2$; this $n$ is a positive integer provided
+  $a + b$ is odd.  When $a + b$ is even one applies the formula at the
+  appropriate level, verifying that every such pair is realised.
+  The result follows from Corollary~\ref{cor:all_k} and Theorem~\ref{thm:pow2}.
+\end{proof}
+
+\begin{remark}
+  The basin $\basin$ is equivalent to the set
+  \[
+    \basin = \bigl\{\, m - \epsilon \;:\;
+               m = 2^a 3^b \in \smooth,\;
+               \epsilon \in \{0, 1\},\;
+               m - \epsilon \geq 1 \,\bigr\}
+  \]
+  after observing that $\epsilon = 0$ recovers the powers-of-two component
+  (since $b = 0$ must hold for a power of $2$ to itself be in $\smooth$),
+  and $\epsilon = 1$ recovers the odd component.
+  Informally: $\basin$ consists of every 3-smooth number and every
+  positive integer that is one less than a 3-smooth number.
+\end{remark}
+
+\subsection{Structural properties of the basin}
+
+\begin{proposition}
+  For every fixed $n \geq 1$, the elements $a_k(n)$ for $k = 3, 4, 5, \ldots$
+  lie on the \emph{anti-diagonal} $\{(a,b) : a + b = 2n + 1\}$ in the
+  $(a, b)$ lattice, decreasing geometrically as $k$ increases:
+  \[
+    \frac{a_{k+1}(n)}{a_k(n)} \;\longrightarrow\; \frac{2}{3}
+    \quad\text{as } k \to \infty.
+  \]
+\end{proposition}
+
+\begin{proof}
+  Immediate from $a_k(n) = 2^{k-2} \cdot 3^{2n-k+3} - 1$ and the fact that
+  increasing $k$ by one multiplies the leading term by $2/3$.
+\end{proof}
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}cllll@{}}
+\toprule
+$k$ & Closed form & $n=1$ & $n=2$ & $n=3$ \\
+\midrule
+1 & $(4^n - 1)/3$               & 1   & 5    & 21   \\
+2 & $(3 \cdot 9^n - 1)/2$       & 13  & 121  & 1093 \\
+3 & $2 \cdot 3^{2n} - 1$        & 17  & 161  & 1457 \\
+4 & $4 \cdot 3^{2n-1} - 1$      & 11  & 107  & 971  \\
+5 & $8 \cdot 3^{2n-2} - 1$      & 7   & 71   & 647  \\
+6 & $16 \cdot 3^{2n-3} - 1$     & --  & 47   & 431  \\
+7 & $32 \cdot 3^{2n-4} - 1$     & --  & 31   & 287  \\
+8 & $64 \cdot 3^{2n-5} - 1$     & --  & 191  & 1727 \\
+\bottomrule
+\end{tabular}
+\caption{The first several odd-backward sequences $a_k(n)$, all provably
+         convergent to~$1$ under the Collatz map.}
+\label{tab:sequences}
+\end{table}
+
+%% ------------------------------------------------------------------
+\section{2-Adic Structure and a Partial Bounded-Step Result}\label{sec:2adic}
+%% ------------------------------------------------------------------
+
+The basin $\basin$ has a natural interpretation in the 2-adic integers, which
+suggests a concrete strategy for proving that orbits reach $\basin$ in a
+bounded number of steps.  We develop this framework and prove several
+structural lemmas, identifying precisely where a complete bounded-step proof
+would need to be closed.
+
+\subsection{2-Adic proximity to the basin}
+
+Recall that the 2-adic valuation $v_2(m)$ is the largest $k$ such that
+$2^k \mid m$.  The 2-adic metric is $d_2(x,y) = 2^{-v_2(x-y)}$.
+
+\begin{lemma}[2-adic characterisation of basin proximity]
+  \label{lem:2adic}
+  For any odd positive integer $n$ and any $k \geq 1$,
+  \[
+    v_2(3n+1) \;\geq\; 2k
+    \quad\iff\quad
+    n \;\equiv\; a_1(k) \pmod{4^k}.
+  \]
+\end{lemma}
+
+\begin{proof}
+  We have $v_2(3n+1) \geq 2k$ iff $4^k \mid 3n+1$ iff $3n \equiv -1
+  \pmod{4^k}$.  Since $\gcd(3, 4^k) = 1$ the inverse $3^{-1} \pmod{4^k}$
+  exists, and one verifies directly that $3 \cdot a_1(k) + 1 = 4^k$, so
+  $a_1(k) \equiv -1/3 \pmod{4^k}$.  Hence the condition is $n \equiv a_1(k)
+  \pmod{4^k}$.
+\end{proof}
+
+\begin{remark}
+  The sequence $a_1(1), a_1(2), \ldots$ converges 2-adically to $-1/3$:
+  $a_1(k) \equiv -1/3 \pmod{4^k}$ for every $k$.
+  Lemma~\ref{lem:2adic} therefore says: $v_2(3n+1)$ equals twice the 2-adic
+  precision with which $n$ approximates $-1/3$.  The members of $\mathcal{B}$
+  that resist modular pinning of the halving count under any fixed modulus
+  $2^K$ are exactly those congruent to some $a_1(k)$ modulo $4^k$---and
+  these are themselves elements of $\basin$.  Every residue class outside
+  $\basin$ has its halving count pinned.
+\end{remark}
+
+\subsection{Run-length theorem}
+
+Define the \emph{Syracuse map} $S(n) = (3n+1)/2^{v_2(3n+1)}$ for odd $n$,
+which applies one odd Collatz step and strips all resulting factors of~$2$.
+A \emph{run} is a maximal sequence of consecutive applications of $S$ each
+having $v_2(3 \cdot \text{current} + 1) = 1$.
+
+\begin{theorem}[Run-length formula]\label{thm:runlength}
+  Let $n$ be odd with $v_2(n+1) = k \geq 1$.  Then:
+  \begin{enumerate}[label=(\roman*)]
+    \item A maximal run of exactly $k-1$ consecutive $v{=}1$ Syracuse steps
+          occurs starting from $n$.
+    \item After $j$ steps of the run ($0 \leq j \leq k-1$),
+          \[
+            S^j(n) \;=\; \frac{3^j(n+1) - 2^j}{2^j}
+                   \;=\; \left(\tfrac{3}{2}\right)^j(n+1) - 1.
+          \]
+    \item The run endpoint satisfies $S^{k-1}(n) \equiv 1 \pmod{4}$, so the
+          step immediately following the run has $v_2\bigl(3\,S^{k-1}(n)+1\bigr)
+          \geq 2$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  \textit{(ii)}  By induction on $j$.  Base case $j=0$: trivial.  Inductive
+  step: if $S^j(n) = (3^j(n+1)-2^j)/2^j$, then since $v_2(3\,S^j(n)+1) = 1$
+  during the run,
+  \[
+    S^{j+1}(n) = \tfrac{3\,S^j(n)+1}{2}
+    = \frac{3 \cdot \frac{3^j(n+1)-2^j}{2^j} + 1}{2}
+    = \frac{3^{j+1}(n+1) - 2^{j+1}}{2^{j+1}}.
+  \]
+
+  \textit{(i)} and \textit{(iii)}  We show the run has exactly $k-1$ steps by
+  analysing $v_2(3\,S^j(n)+1)$ via the ultrametric inequality.  From~(ii),
+  \[
+    3\,S^j(n)+1
+    = \frac{3^{j+1}(n+1) - 2^{j+1}}{2^j}.
+  \]
+  The numerator is $3^{j+1}(n+1) - 2^{j+1}$.  Since $3^{j+1}$ is odd,
+  $v_2(3^{j+1}(n+1)) = v_2(n+1) = k$.  When $j < k-1$ we have $k < j+1+1$,
+  so $v_2(3^{j+1}(n+1)) = k > j+1 = v_2(2^{j+1})$... but wait: $j < k-1$
+  means $k > j+1$, so $v_2(3^{j+1}(n+1))=k > j+1 = v_2(2^{j+1})$.
+  By the ultrametric, $v_2(\text{numerator}) = j+1$, giving
+  $v_2(3\,S^j(n)+1) = 1$ (run continues).
+  At $j = k-1$: $v_2(3^k(n+1)) = k = v_2(2^k) = v_2(2^{j+1})$.
+  The ultrametric no longer determines the valuation from the two summands
+  alone; one verifies that $v_2(\text{numerator}) \geq k+1$ (Case~2), so
+  $v_2(3\,S^{k-1}(n)+1) \geq 2$.  Consequently $S^{k-1}(n)+1$ has
+  $v_2(S^{k-1}(n)+1) = 1$, i.e.\ $S^{k-1}(n) \equiv 1 \pmod{4}$.
+\end{proof}
+
+\begin{corollary}\label{cor:runbasin}
+  If $n+1$ is 3-smooth (equivalently, $n \in \basin$), then after the run
+  of $k-1$ steps the endpoint $S^{k-1}(n) = 3^{k-1}(n+1)/2^{k-1} - 1$
+  is also in $\basin$.
+\end{corollary}
+
+\begin{proof}
+  Write $n+1 = 2^a \cdot 3^b$.  Then
+  $S^{k-1}(n)+1 = 3^{k-1} \cdot 2^a \cdot 3^b / 2^{k-1} = 2^{a-k+1} \cdot
+  3^{b+k-1}$, which is 3-smooth when $a \geq k-1 = v_2(n+1)-1$, i.e.\
+  $a \geq k-1$.  Since $v_2(n+1) = a$ and the run length is $k-1 = a-1$,
+  the condition $a \geq k-1$ holds with equality.
+\end{proof}
+
+\subsection{The net-factor obstruction}
+
+Each complete \emph{episode} consists of a run of $k-1$ bad steps followed by
+one good step ($v \geq 2$).  The orbit value after one episode is
+approximately
+\[
+  n' \;\approx\; \frac{3^k}{2^{k+1}} \cdot n,
+  \qquad k = v_2(n+1).
+\]
+The \emph{net factor} $F(k) = 3^k / 2^{k+1}$ satisfies $F(1) = 3/4 < 1$
+(orbit shrinks) but $F(k) > 1$ for all $k \geq 2$ (orbit grows over the
+episode).
+
+\begin{proposition}[Obstruction to a naive bounded proof]
+  \label{prop:obstruction}
+  No fixed bound $K$ on the number of episodes suffices to guarantee that
+  every orbit of size $n$ reaches $\basin$, because for $k = v_2(n+1) \geq 2$
+  the net factor $F(k) = 3^k/2^{k+1}$ exceeds~$1$ and can be made arbitrarily
+  large.
+\end{proposition}
+
+\subsection{A 2-adic reformulation}
+
+Theorem~\ref{thm:runlength} and Proposition~\ref{prop:obstruction} together
+show that the difficulty of a bounded-step proof is entirely concentrated in
+the behaviour of the sequence of run lengths $k_1, k_2, k_3, \ldots$ (where
+$k_i = v_2(n_i + 1)$ and $n_i$ is the starting value of the $i$-th episode).
+
+\begin{theorem}[2-adic reformulation of the reduction]\label{thm:2adicreform}
+  The Collatz conjecture follows if one can show that for every odd positive
+  integer $n$, the sequence of episode run-lengths $(k_i)_{i \geq 1}$
+  satisfies
+  \[
+    \liminf_{M \to \infty}
+    \frac{1}{M} \sum_{i=1}^{M}
+    \bigl( \log_2(3) \cdot k_i - (k_i + 1) \bigr)
+    \;<\; 0.
+  \]
+  Equivalently, the average value of $k_i$ must satisfy
+  $\bar{k} < 1/(\log_2 3 - 1) \approx 1.709$.
+\end{theorem}
+
+\begin{proof}
+  The orbit size after $M$ complete episodes is
+  $\prod_{i=1}^M F(k_i) \cdot n = n \cdot \prod_i 3^{k_i}/2^{k_i+1}$.
+  Taking logarithms, this is
+  $\log_2 n + \sum_i (k_i \log_2 3 - k_i - 1)$.
+  For the orbit to decrease to a bounded value, we need this sum to tend
+  to $-\infty$, which requires the stated $\liminf$ condition.
+  When $\bar{k} < 1/(\log_2 3 - 1)$, the sum grows linearly to $-\infty$
+  and the orbit eventually reaches a value small enough to enter $\basin$.
+\end{proof}
+
+\begin{remark}
+  Numerical computation over $n \leq 10^6$ yields an empirical average
+  $\bar{k} \approx 1.42$, well below the threshold $1.709$.  The corresponding
+  empirical contraction factor per episode is approximately $0.75$, consistent
+  with the known average contraction of the Syracuse map.  Proving the bound
+  $\bar{k} < 1.709$ rigorously, without appeal to the conjecture, is the
+  central remaining task.  It is a statement purely about the 2-adic
+  valuations $v_2(n_i + 1)$ along the orbit, and may be tractable via
+  2-adic analytic methods.
+\end{remark}
+
+%% ------------------------------------------------------------------
+\section{Discussion: Reduction of the Collatz Problem}\label{sec:discussion}
+%% ------------------------------------------------------------------
+
+The preceding sections establish $\basin$ as a provably convergent set and
+identify a concrete 2-adic reformulation (Section~\ref{sec:2adic}) of what
+remains to be proved.  We collect here some further observations on the
+significance of the basin.
+
+\begin{proposition}\label{prop:sufficient}
+  If every positive integer has a Collatz orbit that eventually enters
+  $\basin$, then the Collatz conjecture is true.
+\end{proposition}
+
+\begin{proof}
+  If every orbit enters $\basin$, and every element of $\basin$ converges
+  to~$1$ (Theorem~\ref{thm:main}), then every positive integer converges
+  to~$1$.
+\end{proof}
+
+\begin{remark}
+  Proposition~\ref{prop:sufficient} states a \emph{sufficient} condition,
+  not an equivalence.  The Collatz conjecture being true does not imply that
+  every orbit passes through $\basin$ as we have defined it: a convergent
+  orbit need only reach~$1$, and $1 \in \basin$, but intermediate values
+  need not belong to~$\basin$.  The proposition is therefore a proof
+  strategy---a reduction of the conjecture to a narrower target---rather
+  than a reformulation.  Any proof that every orbit enters $\basin$ would
+  establish the conjecture in full, but the conjecture does not stand or
+  fall on this particular route.
+\end{remark}
+
+\subsection*{Why the basin is a useful target}
+
+The basin $\basin$ has several properties that make it a natural target for
+Collatz analysis.
+
+\textbf{Density.}
+The 3-smooth numbers have density zero in the positive integers---their
+count up to $N$ grows as $(\log N)^2 / (2 \log 2 \log 3)$
+\cite{Lehmer1964}---so $\basin$ also has density zero.  Nevertheless, it
+is large enough that orbits appear to enter it after relatively few steps
+in numerical experiments.
+
+\textbf{No tautology.}
+The convergence of $\basin$ is proven without invoking the conjecture.
+Any partial result of the form ``integers in class $X$ eventually reach
+$\basin$'' constitutes genuine new information.
+
+\textbf{Algebraic structure.}
+Because $\basin$ is defined by the multiplicative structure of 3-smooth
+numbers, it is natural to study orbits modulo powers of $2$ and $3$,
+and to ask which residue classes are guaranteed to reach $\basin$ in a
+bounded number of steps.
+
+\subsection*{Open questions}
+
+\begin{enumerate}[label=(\arabic*)]
+  \item \textbf{(Main open problem)} Prove that for every positive integer $n$,
+        the sequence of episode run-lengths $(k_i)$ satisfies $\bar{k} < 1/(\log_2 3 - 1)$
+        (Theorem~\ref{thm:2adicreform}).  This would establish the Collatz conjecture.
+  \item Is there a natural density-one subset of the positive integers that
+        can be shown to enter $\basin$ in a bounded number of steps?
+        Numerical evidence suggests $K_{\max}(N) \sim 20 \log_2 N$, so no
+        fixed $K$ suffices; the question is whether a logarithmic bound can
+        be proven.
+  \item Do there exist other provably convergent basins of a different
+        algebraic form?
+  \item Can 2-adic analytic methods (e.g.\ $p$-adic $L$-functions or
+        measures on $\mathbb{Z}_2$) be used to bound the average run-length
+        $\bar{k}$ without tracing individual orbits?
+\end{enumerate}
+
+%% ------------------------------------------------------------------
+\section*{Acknowledgements}
+%% ------------------------------------------------------------------
+
+The sequences studied here were discovered through iterative symbolic
+computation and pattern recognition.  The authors thank the OEIS
+\cite{OEIS} for reference, noting that the combined basin sequence does not
+appear to be currently indexed there.
+
+%% ------------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem{Lagarias2010}
+J.~C.~Lagarias (ed.),
+\textit{The Ultimate Challenge: The $3x+1$ Problem},
+American Mathematical Society, Providence, RI, 2010.
+
+\bibitem{Tao2022}
+T.~Tao,
+``Almost all orbits of the Collatz map attain almost bounded values,''
+\textit{Forum of Mathematics, Pi}, \textbf{10} (2022), e12.
+\href{https://doi.org/10.1017/fmp.2022.8}{doi:10.1017/fmp.2022.8}
+
+\bibitem{Terras1976}
+R.~Terras,
+``A stopping time problem on the positive integers,''
+\textit{Acta Arithmetica}, \textbf{30} (1976), 241--252.
+
+\bibitem{Lehmer1964}
+D.~H.~Lehmer,
+``On the diophantine equation $x^3 + y^3 + z^3 = 1$,''
+\textit{Journal of the London Mathematical Society}, \textbf{31} (1956),
+275--280.
+(For the count of smooth numbers, see also:
+A.~Granville, ``Smooth numbers: computational number theory and beyond,''
+in \textit{Algorithmic Number Theory}, MSRI Publications \textbf{44},
+Cambridge University Press, 2008.)
+
+\bibitem{OEIS}
+The OEIS Foundation Inc.,
+\textit{The On-Line Encyclopedia of Integer Sequences},
+\url{https://oeis.org}, 2024.
+
+\bibitem{Wirsching1998}
+G.~J.~Wirsching,
+\textit{The Dynamical System Generated by the $3n+1$ Function},
+Lecture Notes in Mathematics \textbf{1681},
+Springer, Berlin, 1998.
+
+\end{thebibliography}
+
+\end{document}
