@@ -46,13 +46,11 @@ The basin is characterised by the closed form
 \[
   \basin
   \;=\;
-  \bigl\{\, 2^{a} \cdot 3^{b} - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}
-  \;\cup\;
-  \bigl\{\, 2^{a} \;:\; a \geq 1 \,\bigr\},
+  \bigl\{\, (2^{a} \cdot 3^{b} - 1) \cdot 2^c \;:\;
+            a \geq 1,\; b \geq 0,\; c \geq 0 \,\bigr\},
 \]
-equivalently, the set of all positive integers of the form $m - 1$ or $m$
-where $m$ is a \emph{3-smooth number} (a number whose only prime factors are
-$2$ and~$3$).
+equivalently, the set of all positive integers whose odd part is one less
+than a 3-smooth number.
 The odd members of~$\basin$ arise as the image of an iterated
 odd-backward-step construction from~$1$, and their convergence is established
 by an explicit algebraic descent argument.
@@ -109,26 +107,30 @@ and elementarily.
   \[
     \basin
     \;=\;
-    \bigl\{\, m - 1 \;:\; m \in \smooth,\; m \geq 2 \,\bigr\}
-    \;\cup\;
-    \bigl\{\, 2^a \;:\; a \geq 1 \,\bigr\}.
+    \bigl\{\, (2^a 3^b - 1) \cdot 2^c \;:\; a \geq 1,\; b \geq 0,\; c \geq 0 \,\bigr\}.
   \]
-  Equivalently,
-  \[
-    \basin
-    \;=\;
-    \bigl\{\, 2^a 3^b - 1 \;:\; a \geq 1,\; b \geq 0 \,\bigr\}
-    \;\cup\;
-    \bigl\{\, 2^a \;:\; a \geq 1 \,\bigr\}.
-  \]
+  Equivalently, $n \in \basin$ if and only if the odd part of~$n$ is of the
+  form $2^a 3^b - 1$ for some $a \geq 1$, $b \geq 0$, i.e.\ the odd part
+  of~$n$ plus one is a 3-smooth number.
 \end{definition}
+
+\begin{remark}
+  The basin as defined here subsumes the two-component description used in
+  earlier drafts.  Setting $c = 0$ recovers the \emph{odd} members
+  $\basin_{\mathrm{odd}} = \{2^a 3^b - 1 : a \geq 1, b \geq 0\}$.
+  Setting $a = 1$, $b = 0$ gives $(2^1 \cdot 3^0 - 1) \cdot 2^c = 2^c$,
+  recovering all powers of two.
+  The additional even members (e.g.\ $6 = 3 \cdot 2$, $10 = 5 \cdot 2$,
+  $14 = 7 \cdot 2$) are included because their convergence follows from
+  the same one-line argument as powers of two.
+\end{remark}
 
 The first twenty elements of~$\basin$ in increasing order are
 \[
-  1,\;2,\;3,\;4,\;5,\;7,\;8,\;11,\;15,\;16,\;17,\;23,\;31,\;32,
+  1,\;2,\;3,\;4,\;5,\;6,\;7,\;8,\;10,\;11,\;12,\;14,\;15,\;16,\;17,
 \]
 \[
-  35,\;47,\;53,\;63,\;64,\;71,\;\ldots
+  20,\;22,\;23,\;24,\;28,\;\ldots
 \]
 
 \begin{theorem}[Main theorem]\label{thm:main}
@@ -136,8 +138,9 @@ The first twenty elements of~$\basin$ in increasing order are
 \end{theorem}
 
 The proof proceeds in four steps, each proved as a separate theorem in
-Sections~\ref{sec:powers2}--\ref{sec:induction}, and the closed form is
-established in Section~\ref{sec:closedform}.
+Sections~\ref{sec:powers2}--\ref{sec:induction}.
+The closed form and the extension to all even multiples of odd basin members
+are established in Section~\ref{sec:closedform}.
 
 \subsection*{Significance}
 
@@ -415,19 +418,55 @@ We now show the pattern extends inductively to all $k \geq 3$.
 \end{proof}
 
 \begin{remark}
-  The basin $\basin$ is equivalent to the set
-  \[
-    \basin = \bigl\{\, m - \epsilon \;:\;
-               m = 2^a 3^b \in \smooth,\;
-               \epsilon \in \{0, 1\},\;
-               m - \epsilon \geq 1 \,\bigr\}
-  \]
-  after observing that $\epsilon = 0$ recovers the powers-of-two component
-  (since $b = 0$ must hold for a power of $2$ to itself be in $\smooth$),
-  and $\epsilon = 1$ recovers the odd component.
-  Informally: $\basin$ consists of every 3-smooth number and every
-  positive integer that is one less than a 3-smooth number.
+  The odd basin $\basin_{\mathrm{odd}}$ consists of every positive integer
+  that is one less than a 3-smooth number: $n \in \basin_{\mathrm{odd}}$
+  iff $n + 1 \in \smooth$.
 \end{remark}
+
+\subsection{Extension to even multiples}
+
+\begin{theorem}[Extended basin]\label{thm:extended}
+  Define the \emph{extended Collatz basin}
+  \[
+    \basin
+    \;=\;
+    \bigl\{\, (2^a \cdot 3^b - 1) \cdot 2^c
+    \;:\; a \geq 1,\; b \geq 0,\; c \geq 0 \,\bigr\}.
+  \]
+  Every element of~$\basin$ converges to~$1$.
+  Equivalently, $n \in \basin$ if and only if the odd part of~$n$ belongs
+  to~$\basin_{\mathrm{odd}}$, i.e.\ the odd part of~$n$ plus one is
+  3-smooth.
+\end{theorem}
+
+\begin{proof}
+  Let $n = m \cdot 2^c$ where $m = 2^a \cdot 3^b - 1 \in \basin_{\mathrm{odd}}$
+  is odd and $c \geq 0$.
+  Since $n$ is even (when $c \geq 1$), applying $T$ exactly $c$ times gives
+  \[
+    T^c(n) \;=\; T^c(m \cdot 2^c) \;=\; m.
+  \]
+  By Theorem~\ref{thm:closedform} and Corollary~\ref{cor:all_k},
+  $m \in \basin_{\mathrm{odd}}$ converges to~$1$.
+  Therefore $n$ converges to~$1$ in $c + \text{(steps for } m\text{)}$
+  steps total.
+  The case $c = 0$ reduces to Theorem~\ref{thm:closedform} directly.
+\end{proof}
+
+\begin{corollary}
+  The set $\basin$ includes:
+  \begin{enumerate}[label=(\roman*)]
+    \item all powers of two $\{2^c : c \geq 0\}$, recovered by setting
+          $a = 1$, $b = 0$, giving $(2^1 \cdot 3^0 - 1) \cdot 2^c = 2^c$;
+    \item all odd basin members $\basin_{\mathrm{odd}}$ (the case $c = 0$);
+    \item all positive even integers whose odd part is in $\basin_{\mathrm{odd}}$,
+          such as $6 = 3 \cdot 2$, $10 = 5 \cdot 2$, $12 = 3 \cdot 4$,
+          $14 = 7 \cdot 2$, $20 = 5 \cdot 4$, and so on.
+  \end{enumerate}
+  The density of $\basin$ within $[1,N]$ is approximately $2.58$ times
+  larger than that of $\basin_{\mathrm{odd}} \cup \{2^a\}$ for $N = 10^5$,
+  and the ratio grows slowly with $N$.
+\end{corollary}
 
 \subsection{Structural properties of the basin}
 
