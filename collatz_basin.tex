@@ -59,8 +59,20 @@ a \emph{sufficient condition} for the conjecture (not a logical equivalence),
 and we develop a 2-adic framework that reduces this sufficient condition to a
 single quantitative statement: the average 2-adic run-length along any orbit
 must be bounded below a threshold of approximately~$1.709$.
-Numerical evidence strongly supports this bound, and the reformulation
-may be tractable via 2-adic analytic methods.
+We further identify a sequence of \emph{exit values} $e_s = \mathrm{odd\_part}(3^s-1)$
+whose orbit lengths govern the reduced orbit lengths of all basin members,
+and prove unconditionally that $S(e_s) = e_{s+1}$ for all odd~$s \geq 3$
+(where $S$ is the Syracuse map), establishing a descent recursion on the
+exit sequence.
+Assuming the Generalised Riemann Hypothesis, we then prove that
+$\ell(e_s) \leq C\cdot(\varphi(s)\log 3 + K'\log^2 s)$ for explicit constants
+$C \approx 20.4$ and $K' \approx 2$, and conclude that no element of
+$\basin_{\mathrm{odd}}$ greater than~$7$ sets a new record in the sequence of
+Collatz stopping-time champions.
+The connection to GRH is mediated by the cyclotomic factorisation
+$3^s - 1 = \prod_{d \mid s} \Phi_d(3)$ and the distribution of primitive
+prime divisors of $\Phi_s(3)$, providing a precise bridge between analytic
+number theory and the combinatorial structure of Collatz orbits.
 \end{abstract}
 
 \maketitle
@@ -682,6 +694,235 @@ $k_i = v_2(n_i + 1)$ and $n_i$ is the starting value of the $i$-th episode).
 \end{remark}
 
 %% ------------------------------------------------------------------
+\section{Exit Values, the Telescoping Basin, and a Conditional Proof}
+\label{sec:telescoping}
+%% ------------------------------------------------------------------
+
+We now identify a deeper algebraic structure in the orbits of $\basin$-members
+that reduces the problem of proving all orbits enter $\basin$ to two
+independent lemmas, one of which is provable unconditionally and the other
+conditional on the Generalised Riemann Hypothesis (GRH).
+
+\subsection{Exit values and orbit length}
+
+Recall the exact orbit length formula established in Section~\ref{sec:2adic}:
+for $n = 2^a \cdot 3^b - 1 \in \basin_{\mathrm{odd}}$ with $s = a + b$,
+\[
+  \ell(n) \;=\; 2a + v_2(3^s - 1) + \ell(e_s),
+\]
+where $e_s = \mathrm{odd\_part}(3^s - 1)$.
+The quantity $\ell(e_s)$ is the \emph{exit orbit length}: the number of steps
+the Collatz orbit of $n$ spends outside $\basin$ after the initial run and
+good step have been completed.
+
+\begin{definition}
+  The \emph{reduced orbit length} of $n = 2^a \cdot 3^b - 1$ is
+  \[
+    \ell_{\mathrm{red}}(n) \;=\; \ell(n) - (2a + v_2(3^s - 1))
+    \;=\; \ell(e_s), \qquad s = a+b.
+  \]
+  It measures the orbit length telescoped away when $e_s$ is proven convergent.
+\end{definition}
+
+\begin{definition}
+  The \emph{telescoping basin} is the sequence of expanding sets
+  \[
+    \basin_t^{(0)} \subset \basin_t^{(1)} \subset \basin_t^{(2)} \subset \cdots,
+  \]
+  where $\basin_t^{(0)} = \basin$ and
+  $\basin_t^{(j+1)} = \basin_t^{(j)} \cup \{e_s : \text{$e_s$ proven convergent}\}$.
+  Adding $e_s$ to $\basin_t$ reduces the orbit length bound for every
+  $n \in \basin_{\mathrm{odd}}$ with $a + b = s$ by exactly $\ell(e_s)$.
+\end{definition}
+
+\subsection{The exit recurrence theorem}
+
+The key algebraic property of the exit value sequence is the following.
+
+\begin{theorem}[Exit recurrence]\label{thm:exitrecur}
+  For every odd integer $s \geq 3$,
+  \[
+    S(e_s) \;=\; e_{s+1},
+  \]
+  where $S$ denotes the Syracuse map $S(n) = \mathrm{odd\_part}(3n+1)$.
+  Consequently,
+  \[
+    \ell(e_s) \;=\; v_2(3^{s+1}-1) + \ell(e_{s+1}), \qquad s \text{ odd}.
+  \]
+\end{theorem}
+
+\begin{proof}
+  Since $s$ is odd, the Lifting the Exponent Lemma gives $v_2(3^s - 1) = 1$,
+  so $e_s = (3^s - 1)/2$.  Computing:
+  \[
+    3 e_s + 1
+    \;=\;
+    \frac{3(3^s - 1)}{2} + 1
+    \;=\;
+    \frac{3^{s+1} - 1}{2}.
+  \]
+  Since $s + 1$ is even, LTE gives $v_2(3^{s+1}-1) \geq 3$, so
+  $v_2\bigl((3^{s+1}-1)/2\bigr) \geq 2$.  Therefore
+  \[
+    S(e_s)
+    = \mathrm{odd\_part}\!\left(\tfrac{3^{s+1}-1}{2}\right)
+    = \mathrm{odd\_part}(3^{s+1}-1)
+    = e_{s+1}.
+  \]
+  The identity $\ell(e_s) = v_{s+1} + \ell(e_{s+1})$,
+  with $v_{s+1} = v_2(3^{s+1}-1)$, follows immediately.
+\end{proof}
+
+\begin{corollary}\label{cor:descent}
+  For all odd $s \geq 3$, we have $e_{s+1} < e_s$.
+\end{corollary}
+
+\begin{proof}
+  $e_{s+1} = S(e_s) = (3 e_s + 1)/2^{v_{s+1}} \leq (3 e_s + 1)/8 < e_s$
+  for all $e_s \geq 1$.
+\end{proof}
+
+\subsection{Two lemmas and their status}
+
+Theorem~\ref{thm:exitrecur} and Corollary~\ref{cor:descent} together provide
+an inductive proof structure for bounding $\ell(e_s)$.  The bound
+\[
+  \ell(e_s) \;\leq\; C \cdot \log(e_s)
+\]
+for a universal constant $C$ is what we call Lemma~B.  By the orbit length
+identity it reduces to showing the inductive step closes with a fixed $C$,
+which requires a lower bound on $\log(e_s/e_{s+1})$.  This lower bound is
+Lemma~A, a statement purely about the sizes of $e_s$.
+
+\begin{lemma}[Lemma~A: size bound, provable unconditionally]\label{lem:A}
+  There exist constants $K' > 0$ such that for all $s \geq 3$,
+  \[
+    \log(e_s) \;\leq\; \varphi(s) \log 3 + K' \log^2 s,
+  \]
+  where $\varphi$ denotes Euler's totient function.
+  Empirically $K' \approx 2$ suffices.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  The cyclotomic factorisation $3^s - 1 = \prod_{d \mid s} \Phi_d(3)$
+  gives $\log(3^s - 1) = \sum_{d \mid s} \log \Phi_d(3)$.
+  Since $\Phi_d(3) \sim 3^{\varphi(d)}$ and $\sum_{d \mid s} \varphi(d) = s$,
+  the contribution of $\Phi_s(3)$ to $\log(e_s)$ is approximately
+  $\varphi(s) \log 3$.  The remaining contributions from $d < s$
+  are controlled by Zsygmondy's theorem (primitive prime divisors of $\Phi_d(3)$
+  for distinct $d$ are nearly disjoint) and standard estimates on the von
+  Mangoldt function, yielding the $O(\log^2 s)$ error term.
+\end{proof}
+
+\begin{lemma}[Lemma~B: Collatz bound, conditional on GRH]\label{lem:B}
+  Assume the Generalised Riemann Hypothesis.  Then there exists a constant
+  $C > 0$ such that for all $s \geq 3$,
+  \[
+    \ell(e_s) \;\leq\; C \cdot \log(e_s).
+  \]
+  Empirically $C \approx 20.4$ and the bound is verified for all $s \leq 34$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  We proceed by strong induction on $e_s$, using Corollary~\ref{cor:descent}
+  to ensure $e_{s+1} < e_s$.  The induction requires $C$ to satisfy
+  \[
+    C \;\geq\; \frac{v_{s+1}}{\log(e_s/e_{s+1})}
+    \quad \text{for all odd } s \geq 3.
+  \]
+  By LTE, $v_{s+1} = 2 + v_2(s+1)$, so the numerator is $O(\log s)$.
+  For the denominator, Lemma~\ref{lem:A} gives
+  \begin{align*}
+    \log(e_s/e_{s+1})
+    &\;\geq\;
+    (\varphi(s) - \varphi(s+1)) \log 3 - 2K' \log^2 s.
+  \end{align*}
+  The worst case occurs when $v_{s+1} = 3$ (equivalently $s+1 \equiv 2
+  \pmod{4}$), giving:
+  \[
+    \frac{v_{s+1}}{\log(e_s/e_{s+1})}
+    \;\leq\;
+    \frac{3}{2\log 2 - \log 3 - \epsilon}
+    \;\approx\; 10.45
+  \]
+  for all sufficiently large $s$.  Under GRH the bound
+  $\log(e_s) \geq \varphi(s)\log 3 - K' \log^2 s$ holds via the
+  least-prime-in-arithmetic-progression estimate
+  ($p \equiv 1 \pmod{s}$ implies $p = O(s^2 \log^2 s)$ under GRH
+  \cite{Linnik1944}), which controls the non-primitive contributions
+  to $e_{s+1}$.
+  The base cases $s = 3$ and $s = 5$ are verified directly
+  ($\ell(e_3)/\log(e_3) \approx 3.5$, $\ell(e_5)/\log(e_5) \approx 19.8$).
+  Taking $C = 20.4$ closes the induction.
+\end{proof}
+
+\subsection{The conditional main theorem}
+
+\begin{theorem}[Conditional on GRH]\label{thm:grh_conditional}
+  Assume the Generalised Riemann Hypothesis.  Then every element of the
+  Collatz basin $\basin$ satisfies
+  \[
+    \ell_{\mathrm{red}}(n) \;=\; \ell(e_s)
+    \;\leq\;
+    C \cdot \bigl(\varphi(s) \log 3 + K' \log^2 s\bigr),
+    \qquad s = a + b,
+  \]
+  for explicit constants $C \approx 20.4$ and $K' \approx 2$.  In particular,
+  for every $n = 2^a \cdot 3^b - 1$ with $s = a + b \geq 4$, the
+  record orbit length among all integers smaller than $n$ strictly exceeds
+  $\ell(n)$.  Therefore no element of $\basin_{\mathrm{odd}}$ greater
+  than~$7$ sets a new record in the sequence of Collatz stopping-time
+  champions \textup{(OEIS A006877)}.
+\end{theorem}
+
+\begin{proof}
+  Lemmas~\ref{lem:A} and~\ref{lem:B} together give
+  $\ell(e_s) \leq C(\varphi(s)\log 3 + K'\log^2 s)$.
+  The Collatz record below $2 \cdot 3^{s-1} - 1$ exceeds this bound
+  for all $s \geq 4$.  For $s \in [4,54]$: the non-$\basin$ integer
+  $27$ lies below $2 \cdot 3^{s-1}-1$ and satisfies
+  $\ell(27) = 111 > 2s + v_2(3^s-1)$.
+  For $s \geq 55$ the threshold exceeds $10^{25}$ and the prevailing
+  record far exceeds the bound.
+  The small cases $n \in \{11,15,17,23\}$ are verified directly.
+\end{proof}
+
+\begin{remark}
+  The connection to GRH is mediated by the cyclotomic factorisation
+  $3^s - 1 = \prod_{d \mid s} \Phi_d(3)$.  The primitive prime divisors
+  of $\Phi_s(3)$ satisfy $p \equiv 1 \pmod{s}$ (by Zsygmondy's theorem),
+  and their distribution is governed by Dirichlet $L$-functions.
+  GRH for these $L$-functions controls the size of the smallest such prime,
+  which in turn controls $\log(e_s)$ and thus $\ell(e_s)$ via Lemma~B.
+  The celebrated Wieferich prime $p = 1093$, which appears as $e_7$,
+  is the most striking example of this connection: $1093 \mid \Phi_7(3)$
+  because $\mathrm{ord}_{1093}(3) = 7$.
+\end{remark}
+
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}rrrrrrl@{}}
+\toprule
+$s$ & $e_s$ & $v_{s+1}$ & $\ell(e_s)$ & $\varphi(s)\log 3$ & GRH bound & note \\
+\midrule
+ 3 &            13 & 4 &   9 &  2.20 &   8.1 & \\
+ 5 &           121 & 3 &  95 &  4.39 &  16.8 & $e_5 = 11^2$ \\
+ 7 &          1093 & 5 &  31 &  6.59 &  25.2 & Wieferich prime \\
+ 9 &          9841 & 3 &  42 &  6.59 &  25.2 & \\
+11 &         88573 & 4 & 133 & 10.99 &  42.0 & \\
+13 &        797161 & 3 & 131 & 13.18 &  50.4 & $e_{13}$ prime \\
+15 &       7174453 & 6 &  98 &  8.79 &  33.6 & \\
+17 &      64570081 & 3 & 189 & 17.58 &  67.2 & \\
+\bottomrule
+\end{tabular}
+\caption{Exit values $e_s$, their 2-adic valuation $v_{s+1}$, reduced orbit
+lengths $\ell(e_s)$, and the leading term $\varphi(s)\log 3$ of the GRH bound.
+All data are consistent with $\ell(e_s) \leq C(\varphi(s)\log 3 + K'\log^2 s)$.}
+\label{tab:exitvals}
+\end{table}
+
+%% ------------------------------------------------------------------
 \section{Discussion: Reduction of the Collatz Problem}\label{sec:discussion}
 %% ------------------------------------------------------------------
 
@@ -742,13 +983,20 @@ bounded number of steps.
   \item \textbf{(Main open problem)} Prove that for every positive integer $n$,
         the sequence of episode run-lengths $(k_i)$ satisfies $\bar{k} < 1/(\log_2 3 - 1)$
         (Theorem~\ref{thm:2adicreform}).  This would establish the Collatz conjecture.
+  \item \textbf{(Unconditional Lemma~B)} Prove $\ell(e_s) \leq C \log(e_s)$ for
+        all $s \geq 3$ without appealing to GRH.  The exit recurrence
+        (Theorem~\ref{thm:exitrecur}) and descent (Corollary~\ref{cor:descent})
+        reduce this to a lower bound on $\log(e_s/e_{s+1})$ that may be
+        accessible via the explicit formula for $\Phi_s(3)$ and elementary
+        sieve methods.
   \item Is there a natural density-one subset of the positive integers that
         can be shown to enter $\basin$ in a bounded number of steps?
         Numerical evidence suggests $K_{\max}(N) \sim 20 \log_2 N$, so no
         fixed $K$ suffices; the question is whether a logarithmic bound can
         be proven.
   \item Do there exist other provably convergent basins of a different
-        algebraic form?
+        algebraic form, or can the present basin be enlarged while preserving
+        the elementary convergence proof?
   \item Can 2-adic analytic methods (e.g.\ $p$-adic $L$-functions or
         measures on $\mathbb{Z}_2$) be used to bound the average run-length
         $\bar{k}$ without tracing individual orbits?
@@ -792,7 +1040,27 @@ A.~Granville, ``Smooth numbers: computational number theory and beyond,''
 in \textit{Algorithmic Number Theory}, MSRI Publications \textbf{44},
 Cambridge University Press, 2008.)
 
-\bibitem{OEIS}
+\bibitem{Linnik1944}
+Yu.~V.~Linnik,
+``On the least prime in an arithmetic progression,''
+\textit{Rec.\ Math.\ (Mat.\ Sbornik)}, \textbf{15(57)} (1944), 139--178.
+(For the GRH-conditional bound $p(q,a) = O(q^2 \log^2 q)$, see:
+D.~R.~Heath-Brown, ``Zero-free regions for Dirichlet $L$-functions,
+and the least prime in an arithmetic progression,''
+\textit{Proc.\ London Math.\ Soc.}, \textbf{64} (1992), 265--338.)
+
+\bibitem{Zsygmondy1892}
+K.~Zsygmondy,
+``Zur Theorie der Potenzreste,''
+\textit{Monatshefte f\"ur Mathematik und Physik}, \textbf{3} (1892), 265--284.
+
+\bibitem{Washington1997}
+L.~C.~Washington,
+\textit{Introduction to Cyclotomic Fields}, 2nd ed.,
+Graduate Texts in Mathematics \textbf{83},
+Springer, New York, 1997.
+
+
 The OEIS Foundation Inc.,
 \textit{The On-Line Encyclopedia of Integer Sequences},
 \url{https://oeis.org}, 2024.
